@@ -20,10 +20,18 @@ type GetQuoteCommandProvider = SqlCommandProvider<sqlGetQuote, connectionName, C
 type Quote = GetQuoteCommandProvider.Record
 
 type Metric =
-    { Date : DateTime
-      Hi : decimal
-      Lo : decimal
-      Close : decimal }
+    { Date  : DateTime
+      Close : decimal
+      Hi    : decimal
+      Lo    : decimal
+      Res   : decimal
+      Sup   : decimal }
+
+//-------------------------------------------------------------------------------------------------
+
+let paramTicker = "BRK.A"
+let paramRes = 200
+let paramSup = 50
 
 //-------------------------------------------------------------------------------------------------
 
@@ -31,23 +39,44 @@ let getQuotes ticker =
     use command = new GetQuoteCommandProvider()
     command.Execute(ticker)
 
-let quoteToMetric (quote : Quote) =
+let computeMetrics (metrics : Metric list) (quote : Quote) =
 
-    { Date = quote.Date
-      Hi = quote.High
-      Lo = quote.Low
-      Close = quote.Close }
+    let length = List.length metrics
+    let lookbackRes = min length (paramRes - 1)
+    let lookbackSup = min length (paramSup - 1)
+
+    let res =
+        let items = metrics |> List.take lookbackRes |> List.map (fun x -> x.Hi)
+        let items = quote.High :: items
+        items |> List.max
+
+    let sup =
+        let items = metrics |> List.take lookbackSup |> List.map (fun x -> x.Lo)
+        let items = quote.Low :: items
+        items |> List.min
+
+    let metric =
+        { Date = quote.Date
+          Close = quote.Close
+          Hi = quote.High
+          Lo = quote.Low
+          Res = res
+          Sup = sup }
+
+    metric :: metrics
 
 let metricToStringHeaders =
-    "Date, Hi, Lo, Close"
+    "Date, Close, Hi, Lo, Res, Sup"
 
 let metricToString metric =
     let date = metric.Date.ToString("yyyy-MM-dd")
-    sprintf "%s, %.2f, %.2f, %.2f"
+    sprintf "%s, %.2f, %.2f, %.2f, %.2f, %.2f"
         date
+        metric.Close
         metric.Hi
         metric.Lo
-        metric.Close
+        metric.Res
+        metric.Sup
 
 let writeToFile filename metrics =
     let path = Environment.GetEnvironmentVariable("UserProfile") + @"\Desktop\" + filename
@@ -58,7 +87,8 @@ let writeToFile filename metrics =
         let line = metricToString metric
         writer.WriteLine(line)
 
-getQuotes "BRK.A"
-|> Seq.map quoteToMetric
-|> Seq.toArray
+getQuotes paramTicker
+|> List.ofSeq
+|> List.fold computeMetrics List.empty
+|> List.rev
 |> writeToFile "output.csv"
