@@ -129,8 +129,7 @@ let metricToString metric =
 
 let writeToFile filename metrics =
     let path = Environment.GetEnvironmentVariable("UserProfile") + @"\Desktop\" + filename
-    use stream = File.OpenWrite(path)
-    use writer = new StreamWriter(stream)
+    use writer = File.CreateText(path)
     writer.WriteLine(metricToStringHeaders)
     for metric in metrics do
         let line = metricToString metric
