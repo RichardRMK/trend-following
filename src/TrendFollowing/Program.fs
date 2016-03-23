@@ -55,43 +55,43 @@ let computeMetrics (metrics : Metric list) (quote : Quote) =
 
     let res =
         let items = metrics |> List.take lookbackRes |> List.map (fun x -> x.Hi)
-        let items = quote.High :: items
+        let items = quote.Hi :: items
         items |> List.max
 
     let sup =
         let items = metrics |> List.take lookbackSup |> List.map (fun x -> x.Lo)
-        let items = quote.Low :: items
+        let items = quote.Lo :: items
         items |> List.min
 
     let sarEp, sarAf, sarDirection, sar =
         if length = 0 then
-            let sarEp = quote.Low
+            let sarEp = quote.Lo
             let sarAf = paramSarAfInc
-            let sar = quote.High
+            let sar = quote.Hi
             sarEp, sarAf, Neg, sar
         else
             match metrics.Head.SarDirection with
             | Pos
                 ->
-                if quote.Low <= metrics.Head.Sar then
-                    let sarEp = quote.Low
+                if quote.Lo <= metrics.Head.Sar then
+                    let sarEp = quote.Lo
                     let sarAf = paramSarAfInc
                     let sar = metrics.Head.SarEp
                     sarEp, sarAf, Neg, sar
                 else
-                    let sarEp = max metrics.Head.SarEp quote.High
+                    let sarEp = max metrics.Head.SarEp quote.Hi
                     let safAf = min paramSarAfMax (metrics.Head.SarAf + paramSarAfInc)
                     let sar = metrics.Head.Sar + (safAf * (sarEp - metrics.Head.Sar))
                     sarEp, safAf, Pos, sar
             | Neg
                 ->
-                if quote.High >= metrics.Head.Sar then
-                    let sarEp = quote.High
+                if quote.Hi >= metrics.Head.Sar then
+                    let sarEp = quote.Hi
                     let sarAf = paramSarAfInc
                     let sar = metrics.Head.SarEp
                     sarEp, sarAf, Pos, sar
                 else
-                    let sarEp = min metrics.Head.SarEp quote.Low
+                    let sarEp = min metrics.Head.SarEp quote.Lo
                     let safAf = min paramSarAfMax (metrics.Head.SarAf + paramSarAfInc)
                     let sar = metrics.Head.Sar + (safAf * (sarEp - metrics.Head.Sar))
                     sarEp, safAf, Neg, sar
@@ -99,8 +99,8 @@ let computeMetrics (metrics : Metric list) (quote : Quote) =
     let metric =
         { Date = quote.Date
           Close = quote.Close
-          Hi = quote.High
-          Lo = quote.Low
+          Hi = quote.Hi
+          Lo = quote.Lo
           Res = res
           Sup = sup
           SarEp = sarEp
