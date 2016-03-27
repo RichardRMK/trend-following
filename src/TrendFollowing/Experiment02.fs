@@ -16,19 +16,22 @@ let paramSup = 50
 //-------------------------------------------------------------------------------------------------
 
 type Metric =
-    { Date       : DateTime
-      Close      : decimal
-      Hi         : decimal
-      Lo         : decimal
-      Res        : decimal
-      Sup        : decimal
-      IsTrending : bool
-      TrendCount : int
-      Position   : int
-      Cash       : decimal
-      Nav        : decimal
-      NextTake   : int
-      NextStop   : decimal }
+    { Date              : DateTime
+      Close             : decimal
+      Hi                : decimal
+      Lo                : decimal
+      Res               : decimal
+      Sup               : decimal
+      IsTrending        : bool
+      TrendCount        : int
+      Position          : int
+      Cash              : decimal
+      Equity            : decimal
+      ExitValue         : decimal
+      ExitValuePeak     : decimal
+      ExitValueDrawdown : decimal
+      NextTake          : int
+      NextStop          : decimal }
 
 //-------------------------------------------------------------------------------------------------
 
@@ -93,9 +96,25 @@ let computeMetricCash (metrics : Metric list) (quote : Quote) =
         let cash = cash + (if quote.Lo <= metrics.Head.NextStop then ((decimal position) * metrics.Head.NextStop) else 0m)
         cash
 
-let computeMetricNav (quote : Quote) position cash =
+let computeMetricEquity (quote : Quote) position cash =
 
     cash + ((decimal position) * quote.Close)
+
+let computeMetricExitValue sup position cash =
+
+    cash + ((decimal position) * sup)
+
+let computeMetricExitValuePeak (metrics : Metric list) exitValue =
+
+    let length = List.length metrics
+    if (length = 0) then
+        exitValue
+    else
+        max metrics.Head.ExitValuePeak exitValue
+
+let computeMetricExitValueDrawdown exitValue exitValuePeak =
+
+    -((exitValuePeak - exitValue) / exitValuePeak)
 
 let computeMetricNextTake (metrics : Metric list) res sup isTrending position cash =
     let length = List.length metrics
@@ -122,7 +141,10 @@ let computeMetrics (metrics : Metric list) (quote : Quote) =
     let trendCount = computeMetricTrendCount metrics isTrending
     let position = computeMetricPosition metrics quote
     let cash = computeMetricCash metrics quote
-    let nav = computeMetricNav quote position cash
+    let equity = computeMetricEquity quote position cash
+    let exitValue = computeMetricExitValue sup position cash
+    let exitValuePeak = computeMetricExitValuePeak metrics exitValue
+    let exitValueDrawdown = computeMetricExitValueDrawdown exitValue exitValuePeak
     let nextTake = computeMetricNextTake metrics res sup isTrending position cash
     let nextStop = computeMetricNextStop sup position nextTake
 
@@ -137,18 +159,21 @@ let computeMetrics (metrics : Metric list) (quote : Quote) =
           TrendCount = trendCount
           Position = position
           Cash = cash
-          Nav = nav
+          Equity = equity
+          ExitValue = exitValue
+          ExitValuePeak = exitValuePeak
+          ExitValueDrawdown = exitValueDrawdown
           NextTake = nextTake
           NextStop = nextStop }
 
     metric :: metrics
 
 let metricToStringHeaders =
-    "Date, Close, Hi, Lo, Res, Sup, IsTrending, TrendCount, Position, Cash, Nav, NextTake, NextStop"
+    "Date, Close, Hi, Lo, Res, Sup, IsTrending, TrendCount, Position, Cash, Equity, ExitValue, ExitValuePeak, ExitValueDrawdown, NextTake, NextStop"
 
 let metricToString metric =
     let date = metric.Date.ToString("yyyy-MM-dd")
-    sprintf "%s, %.2f, %.2f, %.2f, %.2f, %.2f, %A, %i, %i, %.2f, %.2f, %i, %.2f"
+    sprintf "%s, %.2f, %.2f, %.2f, %.2f, %.2f, %A, %A, %A, %.2f, %.2f, %.2f, %.2f, %.2f, %A, %.2f"
         date
         metric.Close
         metric.Hi
@@ -159,7 +184,10 @@ let metricToString metric =
         metric.TrendCount
         metric.Position
         metric.Cash
-        metric.Nav
+        metric.Equity
+        metric.ExitValue
+        metric.ExitValuePeak
+        metric.ExitValueDrawdown
         metric.NextTake
         metric.NextStop
 
