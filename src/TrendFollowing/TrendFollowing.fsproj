@@ -68,6 +68,7 @@
     <Compile Include="Data.fs" />
     <Compile Include="Experiment01.fs" />
     <Compile Include="Experiment02.fs" />
+    <Compile Include="Experiment03.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
