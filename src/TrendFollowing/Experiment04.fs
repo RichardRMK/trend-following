@@ -176,13 +176,14 @@ let computeMetricExitValueDrawdown exitValue exitValuePeak =
 
     -((exitValuePeak - exitValue) / exitValuePeak)
 
-let computeMetricNextTake (metrics : Metric list) sarEp sar isTrending position cash =
+let computeMetricNextTake (metrics : Metric list) sup sarEp sar isTrending position cash =
     let length = List.length metrics
     if (length < paramWait) then
         0
     else
         if isTrending = true && position = 0 then
-            let take = (paramRisk * cash) / (sarEp - sar)
+            let stop = max sup sar
+            let take = (paramRisk * cash) / (sarEp - stop)
             int take
         else
             0
@@ -211,7 +212,7 @@ let computeMetrics (metrics : Metric list) (quote : Quote) =
     let exitValue = computeMetricExitValue metrics position cash
     let exitValuePeak = computeMetricExitValuePeak metrics exitValue
     let exitValueDrawdown = computeMetricExitValueDrawdown exitValue exitValuePeak
-    let nextTake = computeMetricNextTake metrics sarEp sar isTrending position cash
+    let nextTake = computeMetricNextTake metrics sup sarEp sar isTrending position cash
     let nextStop = computeMetricNextStop sup sar position nextTake
 
     let metric =
