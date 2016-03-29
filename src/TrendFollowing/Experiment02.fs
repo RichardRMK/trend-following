@@ -35,10 +35,6 @@ type Metric =
 
 //-------------------------------------------------------------------------------------------------
 
-let getQuotes ticker =
-    use command = new GetQuoteCommandProvider()
-    command.Execute(ticker)
-
 let computeMetricRes (metrics : Metric list) (quote : Quote) =
     let length = List.length metrics
     let lookback = min length (paramRes - 1)

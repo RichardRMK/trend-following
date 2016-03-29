@@ -30,10 +30,6 @@ type Metric =
 
 //-------------------------------------------------------------------------------------------------
 
-let getQuotes ticker =
-    use command = new GetQuoteCommandProvider()
-    command.Execute(ticker)
-
 let computeMetrics (metrics : Metric list) (quote : Quote) =
 
     let length = List.length metrics

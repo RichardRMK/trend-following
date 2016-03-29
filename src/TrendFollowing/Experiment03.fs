@@ -39,10 +39,6 @@ type Metric =
 
 //-------------------------------------------------------------------------------------------------
 
-let getQuotes ticker =
-    use command = new GetQuoteCommandProvider()
-    command.Execute(ticker)
-
 let computeMetricSarEp (metrics : Metric list) (quote : Quote) =
     let length = List.length metrics
     if (length = 0) then

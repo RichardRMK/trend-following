@@ -16,3 +16,9 @@ let sqlGetQuote = @"..\..\sql\GetQuotes.sql"
 type GetQuoteCommandProvider = SqlCommandProvider<sqlGetQuote, connectionName, ConfigFile = configFile>
 
 type Quote = GetQuoteCommandProvider.Record
+
+//-------------------------------------------------------------------------------------------------
+
+let getQuotes ticker =
+    use command = new GetQuoteCommandProvider()
+    command.Execute(ticker)
