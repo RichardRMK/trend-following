@@ -30,6 +30,7 @@ type Metric =
       ExitValue         : decimal
       ExitValuePeak     : decimal
       ExitValueDrawdown : decimal
+      ExitValueLeverage : decimal
       NextTake          : int
       NextStop          : decimal }
 
@@ -114,6 +115,14 @@ let computeMetricExitValueDrawdown exitValue exitValuePeak =
 
     -((exitValuePeak - exitValue) / exitValuePeak)
 
+let computeMetricExitValueLeverage (metrics : Metric list) position cash =
+    let length = List.length metrics
+    if (length = 0) then
+        0m
+    else
+        let positionValueAtExit = ((decimal position) * metrics.Head.NextStop)
+        positionValueAtExit / (positionValueAtExit + cash)
+
 let computeMetricNextTake (metrics : Metric list) res sup isTrending position cash =
     let length = List.length metrics
     if (length < paramWait) then
@@ -143,6 +152,7 @@ let computeMetrics (metrics : Metric list) (quote : Quote) =
     let exitValue = computeMetricExitValue metrics position cash
     let exitValuePeak = computeMetricExitValuePeak metrics exitValue
     let exitValueDrawdown = computeMetricExitValueDrawdown exitValue exitValuePeak
+    let exitValueLeverage = computeMetricExitValueLeverage metrics position cash
     let nextTake = computeMetricNextTake metrics res sup isTrending position cash
     let nextStop = computeMetricNextStop sup position nextTake
 
@@ -161,17 +171,18 @@ let computeMetrics (metrics : Metric list) (quote : Quote) =
           ExitValue = exitValue
           ExitValuePeak = exitValuePeak
           ExitValueDrawdown = exitValueDrawdown
+          ExitValueLeverage = exitValueLeverage
           NextTake = nextTake
           NextStop = nextStop }
 
     metric :: metrics
 
 let metricToStringHeaders =
-    "Date, Close, Hi, Lo, Res, Sup, IsTrending, TrendCount, Position, Cash, Equity, ExitValue, ExitValuePeak, ExitValueDrawdown, NextTake, NextStop"
+    "Date, Close, Hi, Lo, Res, Sup, IsTrending, TrendCount, Position, Cash, Equity, ExitValue, ExitValuePeak, ExitValueDrawdown, ExitValueLeverage, NextTake, NextStop"
 
 let metricToString metric =
     let date = metric.Date.ToString("yyyy-MM-dd")
-    sprintf "%s, %.2f, %.2f, %.2f, %.2f, %.2f, %A, %A, %A, %.2f, %.2f, %.2f, %.2f, %.2f, %A, %.2f"
+    sprintf "%s, %.2f, %.2f, %.2f, %.2f, %.2f, %A, %A, %A, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %A, %.2f"
         date
         metric.Close
         metric.Hi
@@ -186,6 +197,7 @@ let metricToString metric =
         metric.ExitValue
         metric.ExitValuePeak
         metric.ExitValueDrawdown
+        metric.ExitValueLeverage
         metric.NextTake
         metric.NextStop
 
