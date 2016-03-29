@@ -125,12 +125,14 @@ let computeMetricEquity (quote : Quote) position cash =
 
     cash + ((decimal position) * quote.Close)
 
-let computeMetricExitValue sar position cash =
-
-    cash + ((decimal position) * sar)
+let computeMetricExitValue (metrics : Metric list) position cash =
+    let length = List.length metrics
+    if (length = 0) then
+        cash
+    else
+        cash + ((decimal position) * metrics.Head.NextStop)
 
 let computeMetricExitValuePeak (metrics : Metric list) exitValue =
-
     let length = List.length metrics
     if (length = 0) then
         exitValue
@@ -169,7 +171,7 @@ let computeMetrics (metrics : Metric list) (quote : Quote) =
     let position = computeMetricPosition metrics quote
     let cash = computeMetricCash metrics quote
     let equity = computeMetricEquity quote position cash
-    let exitValue = computeMetricExitValue sar position cash
+    let exitValue = computeMetricExitValue metrics position cash
     let exitValuePeak = computeMetricExitValuePeak metrics exitValue
     let exitValueDrawdown = computeMetricExitValueDrawdown exitValue exitValuePeak
     let nextTake = computeMetricNextTake metrics sarEp sar isTrending position cash
@@ -198,7 +200,7 @@ let computeMetrics (metrics : Metric list) (quote : Quote) =
     metric :: metrics
 
 let metricToStringHeaders =
-    "Date, Close, Hi, Lo, sarEp, sarAf, sarDirection, sar, IsTrending, TrendCount, Position, Cash, Equity, ExitValue, ExitValuePeak, ExitValueDrawdown, NextTake, NextStop"
+    "Date, Close, Hi, Lo, SarEp, SarAf, SarDirection, Sar, IsTrending, TrendCount, Position, Cash, Equity, ExitValue, ExitValuePeak, ExitValueDrawdown, NextTake, NextStop"
 
 let metricToString metric =
     let date = metric.Date.ToString("yyyy-MM-dd")

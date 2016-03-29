@@ -96,12 +96,14 @@ let computeMetricEquity (quote : Quote) position cash =
 
     cash + ((decimal position) * quote.Close)
 
-let computeMetricExitValue sup position cash =
-
-    cash + ((decimal position) * sup)
+let computeMetricExitValue (metrics : Metric list) position cash =
+    let length = List.length metrics
+    if (length = 0) then
+        cash
+    else
+        cash + ((decimal position) * metrics.Head.NextStop)
 
 let computeMetricExitValuePeak (metrics : Metric list) exitValue =
-
     let length = List.length metrics
     if (length = 0) then
         exitValue
@@ -138,7 +140,7 @@ let computeMetrics (metrics : Metric list) (quote : Quote) =
     let position = computeMetricPosition metrics quote
     let cash = computeMetricCash metrics quote
     let equity = computeMetricEquity quote position cash
-    let exitValue = computeMetricExitValue sup position cash
+    let exitValue = computeMetricExitValue metrics position cash
     let exitValuePeak = computeMetricExitValuePeak metrics exitValue
     let exitValueDrawdown = computeMetricExitValueDrawdown exitValue exitValuePeak
     let nextTake = computeMetricNextTake metrics res sup isTrending position cash
