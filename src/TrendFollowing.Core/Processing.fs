@@ -103,56 +103,74 @@ let computeSummary date (tradingLogs : TradingLog[]) (elementLogs : ElementLog<'
 
 let private chooseTakeOrder = function Take order -> Some order | _ -> None
 let private chooseExitOrder = function Exit order -> Some order | _ -> None
+let private positive = (+) 0
+let private negative = (-) 0
 
-let processOrders (orders : Order[]) (quotes : Quote[]) =
+let processTakeOrders (orders : Order[]) (quotes : Quote[]) =
 
-    let takeOrders = orders |> Array.choose chooseTakeOrder
-    let exitOrders = orders |> Array.choose chooseExitOrder
+    let executeOrder (order : TakeOrder) (quote : Quote) =
+        { Date   = quote.Date
+          Ticker = order.Ticker
+          Shares = order.Shares |> positive
+          Price  = quote.Hi }
 
-    let processTakeOrder (order : TakeOrder) =
-
-        let executeOrder (quote : Quote) =
-            { Date   = quote.Date
-              Ticker = order.Ticker
-              Shares = +order.Shares
-              Price  = quote.Hi }
-
+    let processOrder (order : TakeOrder) =
         quotes
         |> Array.tryFind (fun quote -> quote.Ticker = order.Ticker)
-        |> Option.map executeOrder
+        |> Option.map (executeOrder order)
 
-    let processExitOrder (order : ExitOrder) =
+    orders
+    |> Array.choose chooseTakeOrder
+    |> Array.map processOrder
+    |> Array.choose id
 
-        let executeOrder (quote : Quote) =
-            { Date   = quote.Date
-              Ticker = order.Ticker
-              Shares = -order.Shares
-              Price  = order.StopLoss }
+let processExitOrders (orders : Order[]) (quotes : Quote[]) =
 
+    let executeOrder (order : ExitOrder) (quote : Quote) =
+        { Date   = quote.Date
+          Ticker = order.Ticker
+          Shares = order.Shares |> negative
+          Price  = order.StopLoss }
+
+    let processOrder (order : ExitOrder) =
         quotes
         |> Array.tryFind (fun quote -> quote.Ticker = order.Ticker && quote.Lo <= order.StopLoss)
-        |> Option.map executeOrder
+        |> Option.map (executeOrder order)
 
-    let takeTradingLogs =
-        takeOrders
-        |> Array.map processTakeOrder
-        |> Array.choose id
+    orders
+    |> Array.choose chooseExitOrder
+    |> Array.map processOrder
+    |> Array.choose id
 
-    let exitTradingLogs =
-        exitOrders
-        |> Array.map processExitOrder
-        |> Array.choose id
+let processTermTrades date (prevElementLogs : ElementLog<'T>[]) (quotes : Quote[]) =
 
-    Array.concat [ takeTradingLogs; exitTradingLogs ]
+    let isTerminated prevElementLog =
+        quotes
+        |> Array.exists (fun x -> x.Ticker = prevElementLog.RecordsLog.Ticker)
+        |> not
+
+    let openPosition prevElementLog =
+        prevElementLog.RecordsLog.Shares <> 0
+
+    let executeTrade prevElementLog =
+        { Date   = date
+          Ticker = prevElementLog.RecordsLog.Ticker
+          Shares = prevElementLog.RecordsLog.Shares |> negative
+          Price  = prevElementLog.RecordsLog.Close }
+
+    prevElementLogs
+    |> Array.filter isTerminated
+    |> Array.filter openPosition
+    |> Array.map executeTrade
 
 //-------------------------------------------------------------------------------------------------
 
-let runSingleDate system date (prevElementLogs, prevSummaryLog, prevOrders) =
+let runSingleDate system date (prevElementLogs, prevSummaryLog, orders) =
 
     let computeElementLog (tradingLogs : TradingLog[]) (quote : Quote) =
 
         let tradingLogs = tradingLogs |> Array.filter (fun x -> quote.Ticker = x.Ticker)
-        let exitOrders = prevOrders |> Array.choose chooseExitOrder
+        let exitOrders = orders |> Array.choose chooseExitOrder
         let exitOrder = exitOrders |> Array.tryFind (fun x -> quote.Ticker = x.Ticker)
 
         let prevElementLog = prevElementLogs |> Array.tryFind (fun x -> quote.Ticker = x.RecordsLog.Ticker)
@@ -166,16 +184,22 @@ let runSingleDate system date (prevElementLogs, prevSummaryLog, prevOrders) =
           MetricsLog = metricsLog }
 
     let quotes = system.GetQuotes date
-    let tradingLogs = quotes |> processOrders prevOrders
+
+    let tradingLogsTake = quotes |> processTakeOrders orders
+    let tradingLogsExit = quotes |> processExitOrders orders
+    let tradingLogsTerm = quotes |> processTermTrades date prevElementLogs
+    let tradingLogs =
+        Array.concat [ tradingLogsTake; tradingLogsExit; tradingLogsTerm ]
+
     let elementLogs = quotes |> Array.map (computeElementLog tradingLogs)
-    let summaryLog  = computeSummary date tradingLogs elementLogs prevSummaryLog
-    let orders = system.GenerateOrders elementLogs summaryLog
+    let summaryLog = computeSummary date tradingLogs elementLogs prevSummaryLog
+    let nextOrders = system.GenerateOrders elementLogs summaryLog
 
     tradingLogs |> Seq.iter system.EmitTradingLog
     elementLogs |> Seq.iter system.EmitElementLog
     summaryLog |> system.EmitSummaryLog
 
-    (elementLogs, summaryLog, orders)
+    (elementLogs, summaryLog, nextOrders)
 
 let runSimulation system =
 

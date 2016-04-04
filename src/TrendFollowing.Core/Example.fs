@@ -102,9 +102,13 @@ let generateOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : Summar
     let exitOrders =
         match summaryLog.Date with
         | date when date = DateTime(2016, 01, 06) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 100.50m } |]
-        | date when date = DateTime(2016, 01, 07) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 102.50m } |]
-        | date when date = DateTime(2016, 01, 08) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 104.50m } |]
-        | date when date = DateTime(2016, 01, 11) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 106.50m } |]
+        | date when date = DateTime(2016, 01, 07) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 101.50m } |]
+        | date when date = DateTime(2016, 01, 08) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 102.50m } |]
+        | date when date = DateTime(2016, 01, 11) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 103.50m } |]
+        | date when date = DateTime(2016, 01, 12) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 104.50m } |]
+        | date when date = DateTime(2016, 01, 13) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 105.50m } |]
+        | date when date = DateTime(2016, 01, 14) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 106.50m } |]
+        | date when date = DateTime(2016, 01, 15) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 107.50m } |]
         | _ -> Array.empty
 
     Array.concat [ takeOrders; exitOrders ]
