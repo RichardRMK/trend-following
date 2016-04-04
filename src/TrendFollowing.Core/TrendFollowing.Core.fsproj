@@ -5,14 +5,14 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>42621d39-ffa5-4466-80aa-f0e4dc66d708</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>TrendFollowing</RootNamespace>
-    <AssemblyName>TrendFollowing</AssemblyName>
+    <ProjectGuid>0eceed09-536f-4a73-96a5-ba31e7f9ef3d</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>TrendFollowing.Core</RootNamespace>
+    <AssemblyName>TrendFollowing.Core</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
-    <Name>TrendFollowing</Name>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Name>TrendFollowing.Core</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -26,10 +26,8 @@
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Platform)\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>
     </DocumentationFile>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -41,11 +39,23 @@
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Platform)\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>
     </DocumentationFile>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Types.fs" />
+    <Compile Include="Processing.fs" />
+    <Compile Include="Example.fs" />
+  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
@@ -62,42 +72,6 @@
     </Otherwise>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
-  <ItemGroup>
-    <None Include="App.config" />
-    <Content Include="packages.config" />
-    <Compile Include="Data.fs" />
-    <Compile Include="Experiment01.fs" />
-    <Compile Include="Experiment02.fs" />
-    <Compile Include="Experiment03.fs" />
-    <Compile Include="Experiment04.fs" />
-    <Compile Include="Program.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="FSharp.Data.SqlClient">
-      <HintPath>..\..\packages\FSharp.Data.SqlClient.1.8.1\lib\net40\FSharp.Data.SqlClient.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\TrendFollowing.Core\TrendFollowing.Core.fsproj">
-      <Name>TrendFollowing.Core</Name>
-      <Project>{0eceed09-536f-4a73-96a5-ba31e7f9ef3d}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <PropertyGroup>
-    <PostBuildEvent>if exist "$(ProjectDir)..\..\private\Private.config" xcopy "$(ProjectDir)..\..\private\Private.config" "$(TargetDir)" /y</PostBuildEvent>
-  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

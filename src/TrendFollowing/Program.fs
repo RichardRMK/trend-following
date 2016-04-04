@@ -1,5 +1,7 @@
 ﻿module Program
 
+open TrendFollowing
+
 //-------------------------------------------------------------------------------------------------
 
-Experiment04.execute ()
+Processing.runSimulation Example.system
