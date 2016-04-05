@@ -6,6 +6,13 @@ open TrendFollowing.Types
 
 //-------------------------------------------------------------------------------------------------
 
+let private chooseTakeOrder = function Take order -> Some order | _ -> None
+let private chooseExitOrder = function Exit order -> Some order | _ -> None
+let private positive = (+) 0
+let private negative = (-) 0
+
+//-------------------------------------------------------------------------------------------------
+
 let private computeRecordsLogInit (quote : Quote) (exitOrder : ExitOrder option) (tradingLogs : TradingLog[]) =
 
     let shares = tradingLogs |> Seq.sumBy (fun x -> x.Shares)
@@ -25,7 +32,7 @@ let private computeRecordsLogInit (quote : Quote) (exitOrder : ExitOrder option)
       Shares = shares
       StopLoss = stopLoss }
 
-let private computeRecordsLogNext (quote : Quote) (exitOrder : ExitOrder option) (tradingLogs : TradingLog[]) (prevRecordsLog : RecordsLog) =
+let private computeRecordsLogNext (quote : Quote) (exitOrder : ExitOrder option) (tradingLogs : TradingLog[]) prevRecordsLog =
 
     let count = prevRecordsLog.Count + 1
     let deltaHi = (quote.Hi / prevRecordsLog.Hi) - 1m
@@ -56,17 +63,25 @@ let computeRecordsLog (quote : Quote) (exitOrder : ExitOrder option) (tradingLog
 
 //-------------------------------------------------------------------------------------------------
 
-let private computeSummaryLogInit principal =
+let computeElementLog system orders (tradingLogs : TradingLog[]) prevElementLogs (quote : Quote) =
 
-    { Date = DateTime.MinValue
-      Cash = principal
-      Equity = principal
-      ExitValue = principal
-      Peak = principal
-      Drawdown = 0m
-      Leverage = 0m }
+    let tradingLogs = tradingLogs |> Array.filter (fun x -> quote.Ticker = x.Ticker)
+    let exitOrders = orders |> Array.choose chooseExitOrder
+    let exitOrder = exitOrders |> Array.tryFind (fun x -> quote.Ticker = x.Ticker)
 
-let computeSummaryLog date (tradingLogs : TradingLog[]) (elementLogs : ElementLog<'T>[]) (prevSummaryLog : SummaryLog) =
+    let prevElementLog = prevElementLogs |> Array.tryFind (fun x -> quote.Ticker = x.RecordsLog.Ticker)
+    let prevRecordsLog = prevElementLog |> Option.map (fun x -> x.RecordsLog)
+    let prevMetricsLog = prevElementLog |> Option.map (fun x -> x.MetricsLog)
+
+    let recordsLog = prevRecordsLog |> computeRecordsLog quote exitOrder tradingLogs
+    let metricsLog = prevMetricsLog |> system.ComputeMetricsLog recordsLog
+
+    { RecordsLog = recordsLog
+      MetricsLog = metricsLog }
+
+//-------------------------------------------------------------------------------------------------
+
+let computeSummaryLog date (tradingLogs : TradingLog[]) elementLogs prevSummaryLog =
 
     let cashAdjustmentValue =
         tradingLogs
@@ -101,11 +116,6 @@ let computeSummaryLog date (tradingLogs : TradingLog[]) (elementLogs : ElementLo
       Leverage = leverage }
 
 //-------------------------------------------------------------------------------------------------
-
-let private chooseTakeOrder = function Take order -> Some order | _ -> None
-let private chooseExitOrder = function Exit order -> Some order | _ -> None
-let private positive = (+) 0
-let private negative = (-) 0
 
 let processTakeOrders (orders : Order[]) (quotes : Quote[]) =
 
@@ -143,7 +153,7 @@ let processExitOrders (orders : Order[]) (quotes : Quote[]) =
     |> Array.map processOrder
     |> Array.choose id
 
-let processTermTrades date (prevElementLogs : ElementLog<'T>[]) (quotes : Quote[]) =
+let processTermTrades date prevElementLogs (quotes : Quote[]) =
 
     let isTerminated prevElementLog =
         quotes
@@ -166,8 +176,7 @@ let processTermTrades date (prevElementLogs : ElementLog<'T>[]) (quotes : Quote[
 
 //-------------------------------------------------------------------------------------------------
 
-let computeTakeOrders system elementLogs (summaryLog : SummaryLog) =
-
+let computeTakeOrders system elementLogs summaryLog =
     system.ComputeTakeOrders elementLogs summaryLog
 
 let computeExitOrders system elementLogs (takeOrders : TakeOrder[]) =
@@ -190,24 +199,6 @@ let computeExitOrders system elementLogs (takeOrders : TakeOrder[]) =
 
 //-------------------------------------------------------------------------------------------------
 
-let computeElementLog system prevElementLogs orders (tradingLogs : TradingLog[]) (quote : Quote) =
-
-    let tradingLogs = tradingLogs |> Array.filter (fun x -> quote.Ticker = x.Ticker)
-    let exitOrders = orders |> Array.choose chooseExitOrder
-    let exitOrder = exitOrders |> Array.tryFind (fun x -> quote.Ticker = x.Ticker)
-
-    let prevElementLog = prevElementLogs |> Array.tryFind (fun x -> quote.Ticker = x.RecordsLog.Ticker)
-    let prevRecordsLog = prevElementLog |> Option.map (fun x -> x.RecordsLog)
-    let prevMetricsLog = prevElementLog |> Option.map (fun x -> x.MetricsLog)
-
-    let recordsLog = prevRecordsLog |> computeRecordsLog quote exitOrder tradingLogs
-    let metricsLog = prevMetricsLog |> system.ComputeMetricsLog recordsLog
-
-    { RecordsLog = recordsLog
-      MetricsLog = metricsLog }
-
-//-------------------------------------------------------------------------------------------------
-
 let private emitResult system (tradingLogs, elementLogs, summaryLog, _) =
 
     tradingLogs |> Array.iter system.EmitTradingLog
@@ -224,7 +215,7 @@ let runSingleDate system (_, prevElementLogs, prevSummaryLog, orders) date =
     let tradingLogs =
         Array.concat [ tradingLogsTake; tradingLogsExit; tradingLogsTerm ]
 
-    let elementLogs = quotes |> Array.map (computeElementLog system prevElementLogs orders tradingLogs)
+    let elementLogs = quotes |> Array.map (computeElementLog system orders tradingLogs prevElementLogs)
     let summaryLog = computeSummaryLog date tradingLogs elementLogs prevSummaryLog
 
     let takeOrders = computeTakeOrders system elementLogs summaryLog
@@ -236,9 +227,18 @@ let runSingleDate system (_, prevElementLogs, prevSummaryLog, orders) date =
 
 let runSimulation system =
 
+    let initializeSummaryLog principal =
+        { Date      = DateTime.MinValue
+          Cash      = principal
+          Equity    = principal
+          ExitValue = principal
+          Peak      = principal
+          Drawdown  = 0m
+          Leverage  = 0m }
+
     let tradingLogs = Array.empty
     let elementLogs = Array.empty
-    let summaryLog = computeSummaryLogInit system.Principal
+    let summaryLog = initializeSummaryLog system.Principal
     let nextOrders = Array.empty
 
     system.DateSequence

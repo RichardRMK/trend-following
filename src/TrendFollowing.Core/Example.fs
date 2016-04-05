@@ -6,6 +6,59 @@ open TrendFollowing.Types
 
 //-------------------------------------------------------------------------------------------------
 
+type MetricsLog =
+    { Res        : decimal
+      Sup        : decimal
+      IsTrending : bool }
+
+let private computeMetricsLogInit (recordsLog : RecordsLog) =
+
+    { Res = recordsLog.Hi
+      Sup = recordsLog.Lo
+      IsTrending = false }
+
+let private computeMetricsLogNext (recordsLog : RecordsLog) (prevMetricsLog : MetricsLog) =
+
+    let res = max prevMetricsLog.Res recordsLog.Hi
+    let sup = min prevMetricsLog.Sup recordsLog.Lo
+
+    let isTrending =
+        match prevMetricsLog with
+        | prevMetricsLog when recordsLog.Lo <= prevMetricsLog.Sup -> false
+        | prevMetricsLog when recordsLog.Hi >= prevMetricsLog.Res -> true
+        | prevMetricsLog -> prevMetricsLog.IsTrending
+
+    { Res = res
+      Sup = sup
+      IsTrending = isTrending }
+
+let computeMetricsLog (recordsLog : RecordsLog) = function
+    | None      -> computeMetricsLogInit recordsLog
+    | Some prev -> computeMetricsLogNext recordsLog prev
+
+//-------------------------------------------------------------------------------------------------
+
+let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : SummaryLog) : TakeOrder[] =
+
+    match summaryLog.Date with
+    | date when date = DateTime(2016, 01, 06) -> [| { Ticker = "A1"; Shares = 100 } |]
+    | _ -> Array.empty
+
+let calculateStopLoss (elementLog : ElementLog<MetricsLog>) : decimal =
+
+    match elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date with
+    | "A1", date when date = DateTime(2016, 01, 06) -> 100.50m
+    | "A1", date when date = DateTime(2016, 01, 07) -> 101.50m
+    | "A1", date when date = DateTime(2016, 01, 08) -> 102.50m
+    | "A1", date when date = DateTime(2016, 01, 11) -> 103.50m
+    | "A1", date when date = DateTime(2016, 01, 12) -> 104.50m
+    | "A1", date when date = DateTime(2016, 01, 13) -> 105.50m
+    | "A1", date when date = DateTime(2016, 01, 14) -> 106.50m
+    | "A1", date when date = DateTime(2016, 01, 15) -> 107.50m
+    | _ -> failwith "Unexpected element."
+
+//-------------------------------------------------------------------------------------------------
+
 let toQuote ticker (date, hi, lo, dividend, splitNew, splitOld) : Quote =
 
     { Date = date
@@ -57,59 +110,6 @@ let dateSequence =
 let getQuotes date =
     quotes
     |> Array.filter (fun x -> x.Date = date)
-
-//-------------------------------------------------------------------------------------------------
-
-type MetricsLog =
-    { Res        : decimal
-      Sup        : decimal
-      IsTrending : bool }
-
-let private computeMetricsLogInit (recordsLog : RecordsLog) =
-
-    { Res = recordsLog.Hi
-      Sup = recordsLog.Lo
-      IsTrending = false }
-
-let private computeMetricsLogNext (recordsLog : RecordsLog) (prevMetricsLog : MetricsLog) =
-
-    let res = max prevMetricsLog.Res recordsLog.Hi
-    let sup = min prevMetricsLog.Sup recordsLog.Lo
-
-    let isTrending =
-        match prevMetricsLog with
-        | prevMetricsLog when recordsLog.Lo <= prevMetricsLog.Sup -> false
-        | prevMetricsLog when recordsLog.Hi >= prevMetricsLog.Res -> true
-        | prevMetricsLog -> prevMetricsLog.IsTrending
-
-    { Res = res
-      Sup = sup
-      IsTrending = isTrending }
-
-let computeMetricsLog (recordsLog : RecordsLog) = function
-    | None      -> computeMetricsLogInit recordsLog
-    | Some prev -> computeMetricsLogNext recordsLog prev
-
-//-------------------------------------------------------------------------------------------------
-
-let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : SummaryLog) : TakeOrder[] =
-
-    match summaryLog.Date with
-    | date when date = DateTime(2016, 01, 06) -> [| { Ticker = "A1"; Shares = 100 } |]
-    | _ -> Array.empty
-
-let calculateStopLoss (elementLog : ElementLog<MetricsLog>) : decimal =
-
-    match elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date with
-    | "A1", date when date = DateTime(2016, 01, 06) -> 100.50m
-    | "A1", date when date = DateTime(2016, 01, 07) -> 101.50m
-    | "A1", date when date = DateTime(2016, 01, 08) -> 102.50m
-    | "A1", date when date = DateTime(2016, 01, 11) -> 103.50m
-    | "A1", date when date = DateTime(2016, 01, 12) -> 104.50m
-    | "A1", date when date = DateTime(2016, 01, 13) -> 105.50m
-    | "A1", date when date = DateTime(2016, 01, 14) -> 106.50m
-    | "A1", date when date = DateTime(2016, 01, 15) -> 107.50m
-    | _ -> failwith "Unexpected element."
 
 //-------------------------------------------------------------------------------------------------
 
