@@ -7,30 +7,30 @@ open TrendFollowing.Types
 //-------------------------------------------------------------------------------------------------
 
 type MetricsLog =
-    { Res        : decimal
-      Sup        : decimal
-      IsTrending : bool }
+    { Res      : decimal
+      Sup      : decimal
+      Trending : bool }
 
 let private computeMetricsLogInit (recordsLog : RecordsLog) =
 
-    { Res = recordsLog.Hi
-      Sup = recordsLog.Lo
-      IsTrending = false }
+    { Res      = recordsLog.Hi
+      Sup      = recordsLog.Lo
+      Trending = false }
 
 let private computeMetricsLogNext (recordsLog : RecordsLog) (prevMetricsLog : MetricsLog) =
 
     let res = max prevMetricsLog.Res recordsLog.Hi
     let sup = min prevMetricsLog.Sup recordsLog.Lo
 
-    let isTrending =
+    let trending =
         match prevMetricsLog with
         | prevMetricsLog when recordsLog.Lo <= prevMetricsLog.Sup -> false
         | prevMetricsLog when recordsLog.Hi >= prevMetricsLog.Res -> true
-        | prevMetricsLog -> prevMetricsLog.IsTrending
+        | prevMetricsLog -> prevMetricsLog.Trending
 
-    { Res = res
-      Sup = sup
-      IsTrending = isTrending }
+    { Res      = res
+      Sup      = sup
+      Trending = trending }
 
 let computeMetricsLog (recordsLog : RecordsLog) = function
     | None      -> computeMetricsLogInit recordsLog
@@ -115,7 +115,7 @@ let getQuotes date =
 
 let outputPath = Environment.GetEnvironmentVariable("UserProfile") + @"\Desktop\Example\"
 
-let headerElementLog = "Date, Ticker, Count, Hi, Lo, Close, Dividend, SplitNew, SplitOld, DeltaHi, DeltaLo, Shares, StopLoss, Res, Sup, IsTrending"
+let headerElementLog = "Date, Ticker, Count, Hi, Lo, Close, Dividend, SplitNew, SplitOld, DeltaHi, DeltaLo, Shares, StopLoss, Res, Sup, Trending"
 let headerSummaryLog = "Date, Cash, Equity, ExitValue, Peak, Drawdown, Leverage"
 let headerTradingLog = "Date, Ticker, Shares, Price"
 
@@ -140,7 +140,7 @@ let emitElementLog (elementLog : ElementLog<MetricsLog>) =
             elementLog.RecordsLog.StopLoss
             elementLog.MetricsLog.Res
             elementLog.MetricsLog.Sup
-            elementLog.MetricsLog.IsTrending
+            elementLog.MetricsLog.Trending
     File.AppendAllLines(path, [ content ])
 
 let emitSummaryLog (summaryLog : SummaryLog) =

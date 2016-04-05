@@ -18,18 +18,18 @@ let private computeRecordsLogInit (quote : Quote) (exitOrder : ExitOrder option)
     let shares = tradingLogs |> Seq.sumBy (fun x -> x.Shares)
     let stopLoss = if exitOrder.IsNone then 0m else exitOrder.Value.StopLoss
 
-    { Date = quote.Date
-      Ticker = quote.Ticker
-      Count = 1
-      Hi = quote.Hi
-      Lo = quote.Lo
-      Close = quote.Close
+    { Date     = quote.Date
+      Ticker   = quote.Ticker
+      Count    = 1
+      Hi       = quote.Hi
+      Lo       = quote.Lo
+      Close    = quote.Close
       Dividend = 0m
       SplitNew = 1
       SplitOld = 1
-      DeltaHi = 0m
-      DeltaLo = 0m
-      Shares = shares
+      DeltaHi  = 0m
+      DeltaLo  = 0m
+      Shares   = shares
       StopLoss = stopLoss }
 
 let private computeRecordsLogNext (quote : Quote) (exitOrder : ExitOrder option) (tradingLogs : TradingLog[]) prevRecordsLog =
@@ -43,18 +43,18 @@ let private computeRecordsLogNext (quote : Quote) (exitOrder : ExitOrder option)
     let shares = sharesPreviously + sharesAdjustment
     let stopLoss = if exitOrder.IsNone then 0m else exitOrder.Value.StopLoss
 
-    { Date = quote.Date
-      Ticker = quote.Ticker
-      Count = count
-      Hi = quote.Hi
-      Lo = quote.Lo
-      Close = quote.Close
+    { Date     = quote.Date
+      Ticker   = quote.Ticker
+      Count    = count
+      Hi       = quote.Hi
+      Lo       = quote.Lo
+      Close    = quote.Close
       Dividend = 0m
       SplitNew = 1
       SplitOld = 1
-      DeltaHi = deltaHi
-      DeltaLo = deltaLo
-      Shares = shares
+      DeltaHi  = deltaHi
+      DeltaLo  = deltaLo
+      Shares   = shares
       StopLoss = stopLoss }
 
 let computeRecordsLog (quote : Quote) (exitOrder : ExitOrder option) (tradingLogs : TradingLog[]) = function
@@ -65,16 +65,28 @@ let computeRecordsLog (quote : Quote) (exitOrder : ExitOrder option) (tradingLog
 
 let computeElementLog system orders (tradingLogs : TradingLog[]) prevElementLogs (quote : Quote) =
 
-    let tradingLogs = tradingLogs |> Array.filter (fun x -> quote.Ticker = x.Ticker)
-    let exitOrders = orders |> Array.choose chooseExitOrder
-    let exitOrder = exitOrders |> Array.tryFind (fun x -> quote.Ticker = x.Ticker)
+    let prevElementLog =
+        prevElementLogs
+        |> Array.tryFind (fun x -> quote.Ticker = x.RecordsLog.Ticker)
 
-    let prevElementLog = prevElementLogs |> Array.tryFind (fun x -> quote.Ticker = x.RecordsLog.Ticker)
-    let prevRecordsLog = prevElementLog |> Option.map (fun x -> x.RecordsLog)
-    let prevMetricsLog = prevElementLog |> Option.map (fun x -> x.MetricsLog)
+    let exitOrder =
+        orders
+        |> Array.choose chooseExitOrder
+        |> Array.tryFind (fun x -> quote.Ticker = x.Ticker)
 
-    let recordsLog = prevRecordsLog |> computeRecordsLog quote exitOrder tradingLogs
-    let metricsLog = prevMetricsLog |> system.ComputeMetricsLog recordsLog
+    let tradingLogs =
+        tradingLogs
+        |> Array.filter (fun x -> quote.Ticker = x.Ticker)
+
+    let recordsLog =
+        prevElementLog
+        |> Option.map (fun x -> x.RecordsLog)
+        |> computeRecordsLog quote exitOrder tradingLogs
+
+    let metricsLog =
+        prevElementLog
+        |> Option.map (fun x -> x.MetricsLog)
+        |> system.ComputeMetricsLog recordsLog
 
     { RecordsLog = recordsLog
       MetricsLog = metricsLog }
@@ -107,13 +119,13 @@ let computeSummaryLog date (tradingLogs : TradingLog[]) elementLogs prevSummaryL
     let drawdown = (exitValue / peak) - 1m
     let leverage = 1m - (cash / exitValue)
 
-    { Date = date
-      Cash = cash
-      Equity = equity
+    { Date      = date
+      Cash      = cash
+      Equity    = equity
       ExitValue = exitValue
-      Peak = peak
-      Drawdown = drawdown
-      Leverage = leverage }
+      Peak      = peak
+      Drawdown  = drawdown
+      Leverage  = leverage }
 
 //-------------------------------------------------------------------------------------------------
 
