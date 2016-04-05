@@ -67,7 +67,7 @@ type System<'T> =
     { Principal         : decimal
       DateSequence      : DateTime seq
       GetQuotes         : DateTime -> Quote[]
-      ComputeMetrics    : RecordsLog -> 'T option -> 'T
+      ComputeMetricsLog : RecordsLog -> 'T option -> 'T
       ComputeTakeOrders : ElementLog<'T>[] -> SummaryLog -> TakeOrder[]
       CalculateStopLoss : ElementLog<'T> -> decimal
       EmitElementLog    : ElementLog<'T> -> unit

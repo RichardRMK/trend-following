@@ -65,13 +65,13 @@ type MetricsLog =
       Sup        : decimal
       IsTrending : bool }
 
-let private computeMetricsInit (recordsLog : RecordsLog) =
+let private computeMetricsLogInit (recordsLog : RecordsLog) =
 
     { Res = recordsLog.Hi
       Sup = recordsLog.Lo
       IsTrending = false }
 
-let private computeMetricsNext (recordsLog : RecordsLog) (prevMetricsLog : MetricsLog) =
+let private computeMetricsLogNext (recordsLog : RecordsLog) (prevMetricsLog : MetricsLog) =
 
     let res = max prevMetricsLog.Res recordsLog.Hi
     let sup = min prevMetricsLog.Sup recordsLog.Lo
@@ -86,9 +86,9 @@ let private computeMetricsNext (recordsLog : RecordsLog) (prevMetricsLog : Metri
       Sup = sup
       IsTrending = isTrending }
 
-let computeMetrics (recordsLog : RecordsLog) = function
-    | None      -> computeMetricsInit recordsLog
-    | Some prev -> computeMetricsNext recordsLog prev
+let computeMetricsLog (recordsLog : RecordsLog) = function
+    | None      -> computeMetricsLogInit recordsLog
+    | Some prev -> computeMetricsLogNext recordsLog prev
 
 //-------------------------------------------------------------------------------------------------
 
@@ -176,7 +176,7 @@ let system =
     { Principal         = 100000m
       DateSequence      = dateSequence
       GetQuotes         = getQuotes
-      ComputeMetrics    = computeMetrics
+      ComputeMetricsLog = computeMetricsLog
       ComputeTakeOrders = computeTakeOrders
       CalculateStopLoss = calculateStopLoss
       EmitElementLog    = emitElementLog
