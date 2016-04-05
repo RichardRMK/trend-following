@@ -190,23 +190,31 @@ let computeExitOrders system elementLogs (takeOrders : TakeOrder[]) =
 
 //-------------------------------------------------------------------------------------------------
 
-let runSingleDate system date (prevElementLogs, prevSummaryLog, orders) =
+let computeElementLog system prevElementLogs orders (tradingLogs : TradingLog[]) (quote : Quote) =
 
-    let computeElementLog (tradingLogs : TradingLog[]) (quote : Quote) =
+    let tradingLogs = tradingLogs |> Array.filter (fun x -> quote.Ticker = x.Ticker)
+    let exitOrders = orders |> Array.choose chooseExitOrder
+    let exitOrder = exitOrders |> Array.tryFind (fun x -> quote.Ticker = x.Ticker)
 
-        let tradingLogs = tradingLogs |> Array.filter (fun x -> quote.Ticker = x.Ticker)
-        let exitOrders = orders |> Array.choose chooseExitOrder
-        let exitOrder = exitOrders |> Array.tryFind (fun x -> quote.Ticker = x.Ticker)
+    let prevElementLog = prevElementLogs |> Array.tryFind (fun x -> quote.Ticker = x.RecordsLog.Ticker)
+    let prevRecordsLog = prevElementLog |> Option.map (fun x -> x.RecordsLog)
+    let prevMetricsLog = prevElementLog |> Option.map (fun x -> x.MetricsLog)
 
-        let prevElementLog = prevElementLogs |> Array.tryFind (fun x -> quote.Ticker = x.RecordsLog.Ticker)
-        let prevRecordsLog = prevElementLog |> Option.map (fun x -> x.RecordsLog)
-        let prevMetricsLog = prevElementLog |> Option.map (fun x -> x.MetricsLog)
+    let recordsLog = prevRecordsLog |> computeRecordsLog quote exitOrder tradingLogs
+    let metricsLog = prevMetricsLog |> system.ComputeMetricsLog recordsLog
 
-        let recordsLog = prevRecordsLog |> computeRecordsLog quote exitOrder tradingLogs
-        let metricsLog = prevMetricsLog |> system.ComputeMetricsLog recordsLog
+    { RecordsLog = recordsLog
+      MetricsLog = metricsLog }
 
-        { RecordsLog = recordsLog
-          MetricsLog = metricsLog }
+//-------------------------------------------------------------------------------------------------
+
+let private emitResult system (tradingLogs, elementLogs, summaryLog, _) =
+
+    tradingLogs |> Array.iter system.EmitTradingLog
+    elementLogs |> Array.iter system.EmitElementLog
+    summaryLog |> system.EmitSummaryLog
+
+let runSingleDate system (_, prevElementLogs, prevSummaryLog, orders) date =
 
     let quotes = system.GetQuotes date
 
@@ -216,7 +224,7 @@ let runSingleDate system date (prevElementLogs, prevSummaryLog, orders) =
     let tradingLogs =
         Array.concat [ tradingLogsTake; tradingLogsExit; tradingLogsTerm ]
 
-    let elementLogs = quotes |> Array.map (computeElementLog tradingLogs)
+    let elementLogs = quotes |> Array.map (computeElementLog system prevElementLogs orders tradingLogs)
     let summaryLog = computeSummaryLog date tradingLogs elementLogs prevSummaryLog
 
     let takeOrders = computeTakeOrders system elementLogs summaryLog
@@ -224,25 +232,15 @@ let runSingleDate system date (prevElementLogs, prevSummaryLog, orders) =
     let nextOrders =
         Array.concat [ Array.map Take takeOrders; Array.map Exit exitOrders ]
 
-    tradingLogs |> Array.iter system.EmitTradingLog
-    elementLogs |> Array.iter system.EmitElementLog
-    summaryLog |> system.EmitSummaryLog
-
-    (elementLogs, summaryLog, nextOrders)
+    (tradingLogs, elementLogs, summaryLog, nextOrders)
 
 let runSimulation system =
 
-    let initElementLogs = Array.empty<ElementLog<'T>>
-    let initSummaryLog = computeSummaryLogInit system.Principal
-    let initOrders = Array.empty<Order>
+    let tradingLogs = Array.empty
+    let elementLogs = Array.empty
+    let summaryLog = computeSummaryLogInit system.Principal
+    let nextOrders = Array.empty
 
-    let rec loop dates (elementLogs, summaryLog, orders) =
-        match dates with
-        | dates when Seq.isEmpty dates -> ()
-        | dates
-            ->
-            (elementLogs, summaryLog, orders)
-            |> runSingleDate system (Seq.head dates)
-            |> loop (Seq.tail dates)
-
-    loop system.DateSequence (initElementLogs, initSummaryLog, initOrders)
+    system.DateSequence
+    |> Seq.scan (system |> runSingleDate) (tradingLogs, elementLogs, summaryLog, nextOrders)
+    |> Seq.iter (system |> emitResult)
