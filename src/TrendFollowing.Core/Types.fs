@@ -64,11 +64,12 @@ type Order =
 //-------------------------------------------------------------------------------------------------
 
 type System<'T> =
-    { Principal      : decimal
-      DateSequence   : DateTime seq
-      GetQuotes      : DateTime -> Quote[]
-      ComputeMetrics : RecordsLog -> 'T option -> 'T
-      GenerateOrders : ElementLog<'T>[] -> SummaryLog -> Order[]
-      EmitElementLog : ElementLog<'T> -> unit
-      EmitSummaryLog : SummaryLog -> unit
-      EmitTradingLog : TradingLog -> unit }
+    { Principal         : decimal
+      DateSequence      : DateTime seq
+      GetQuotes         : DateTime -> Quote[]
+      ComputeMetrics    : RecordsLog -> 'T option -> 'T
+      ComputeTakeOrders : ElementLog<'T>[] -> SummaryLog -> TakeOrder[]
+      CalculateStopLoss : ElementLog<'T> -> decimal
+      EmitElementLog    : ElementLog<'T> -> unit
+      EmitSummaryLog    : SummaryLog -> unit
+      EmitTradingLog    : TradingLog -> unit }

@@ -92,26 +92,24 @@ let computeMetrics (recordsLog : RecordsLog) = function
 
 //-------------------------------------------------------------------------------------------------
 
-let generateOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : SummaryLog) =
+let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : SummaryLog) : TakeOrder[] =
 
-    let takeOrders =
-        match summaryLog.Date with
-        | date when date = DateTime(2016, 01, 06) -> [| Take { Ticker = "A1"; Shares = 100 } |]
-        | _ -> Array.empty
+    match summaryLog.Date with
+    | date when date = DateTime(2016, 01, 06) -> [| { Ticker = "A1"; Shares = 100 } |]
+    | _ -> Array.empty
 
-    let exitOrders =
-        match summaryLog.Date with
-        | date when date = DateTime(2016, 01, 06) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 100.50m } |]
-        | date when date = DateTime(2016, 01, 07) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 101.50m } |]
-        | date when date = DateTime(2016, 01, 08) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 102.50m } |]
-        | date when date = DateTime(2016, 01, 11) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 103.50m } |]
-        | date when date = DateTime(2016, 01, 12) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 104.50m } |]
-        | date when date = DateTime(2016, 01, 13) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 105.50m } |]
-        | date when date = DateTime(2016, 01, 14) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 106.50m } |]
-        | date when date = DateTime(2016, 01, 15) -> [| Exit { Ticker = "A1"; Shares = 100; StopLoss = 107.50m } |]
-        | _ -> Array.empty
+let calculateStopLoss (elementLog : ElementLog<MetricsLog>) : decimal =
 
-    Array.concat [ takeOrders; exitOrders ]
+    match elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date with
+    | "A1", date when date = DateTime(2016, 01, 06) -> 100.50m
+    | "A1", date when date = DateTime(2016, 01, 07) -> 101.50m
+    | "A1", date when date = DateTime(2016, 01, 08) -> 102.50m
+    | "A1", date when date = DateTime(2016, 01, 11) -> 103.50m
+    | "A1", date when date = DateTime(2016, 01, 12) -> 104.50m
+    | "A1", date when date = DateTime(2016, 01, 13) -> 105.50m
+    | "A1", date when date = DateTime(2016, 01, 14) -> 106.50m
+    | "A1", date when date = DateTime(2016, 01, 15) -> 107.50m
+    | _ -> failwith "Unexpected element."
 
 //-------------------------------------------------------------------------------------------------
 
@@ -175,11 +173,12 @@ let emitTradingLog (tradingLog : TradingLog) =
 //-------------------------------------------------------------------------------------------------
 
 let system =
-    { Principal      = 100000m
-      DateSequence   = dateSequence
-      GetQuotes      = getQuotes
-      ComputeMetrics = computeMetrics
-      GenerateOrders = generateOrders
-      EmitElementLog = emitElementLog
-      EmitSummaryLog = emitSummaryLog
-      EmitTradingLog = emitTradingLog }
+    { Principal         = 100000m
+      DateSequence      = dateSequence
+      GetQuotes         = getQuotes
+      ComputeMetrics    = computeMetrics
+      ComputeTakeOrders = computeTakeOrders
+      CalculateStopLoss = calculateStopLoss
+      EmitElementLog    = emitElementLog
+      EmitSummaryLog    = emitSummaryLog
+      EmitTradingLog    = emitTradingLog }
