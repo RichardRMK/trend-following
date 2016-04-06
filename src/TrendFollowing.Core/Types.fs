@@ -27,7 +27,7 @@ type RecordsLog =
       DeltaHi    : decimal
       DeltaLo    : decimal
       Shares     : int
-      StopLoss   : decimal }
+      StopLoss   : decimal option }
 
 type ElementLog<'T> =
     { RecordsLog : RecordsLog

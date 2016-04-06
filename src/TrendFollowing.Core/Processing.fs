@@ -16,7 +16,7 @@ let inline private negate value = LanguagePrimitives.GenericZero - value
 let private computeRecordsLogInit (quote : Quote) (exitOrder : ExitOrder option) (tradingLogs : TradingLog[]) =
 
     let shares = tradingLogs |> Seq.sumBy (fun x -> x.Shares)
-    let stopLoss = if exitOrder.IsNone then 0m else exitOrder.Value.StopLoss
+    let stopLoss = exitOrder |> Option.map (fun x -> x.StopLoss)
 
     { Date     = quote.Date
       Ticker   = quote.Ticker
@@ -39,7 +39,7 @@ let private computeRecordsLogNext (quote : Quote) (exitOrder : ExitOrder option)
     let deltaLo = (quote.Lo / prevRecordsLog.Lo) - 1m
 
     let shares = tradingLogs |> Seq.sumBy (fun x -> x.Shares) |> (+) prevRecordsLog.Shares
-    let stopLoss = if exitOrder.IsNone then 0m else exitOrder.Value.StopLoss
+    let stopLoss = exitOrder |> Option.map (fun x -> x.StopLoss)
 
     { Date     = quote.Date
       Ticker   = quote.Ticker
@@ -99,16 +99,21 @@ let computeSummaryLog date (tradingLogs : TradingLog[]) elementLogs prevSummaryL
         |> Seq.sum
         |> negate
 
+    let position elementLog =
+        elementLog.RecordsLog.Shares <> 0
+
     let positionValueEquity =
         elementLogs
+        |> Seq.filter position
         |> Seq.map (fun x -> x.RecordsLog)
         |> Seq.map (fun x -> decimal x.Shares * x.Close)
         |> Seq.sum
 
     let positionValueAtExit =
         elementLogs
+        |> Seq.filter position
         |> Seq.map (fun x -> x.RecordsLog)
-        |> Seq.map (fun x -> decimal x.Shares * x.StopLoss)
+        |> Seq.map (fun x -> decimal x.Shares * x.StopLoss.Value)
         |> Seq.sum
 
     let cash = prevSummaryLog.Cash + cashValueAdjustment

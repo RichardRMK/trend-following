@@ -124,7 +124,7 @@ let emitElementLog (elementLog : ElementLog<MetricsLog>) =
     if (Directory.Exists(outputPath) = false) then Directory.CreateDirectory(outputPath) |> ignore
     if (File.Exists(path) = false) then File.WriteAllLines(path, [ headerElementLog ])
     let content =
-        sprintf "%s, %s, %i, %.2f, %.2f, %.2f, %.5f, %i, %i, %.10f, %.10f, %i, %.2f, %.2f, %.2f, %A"
+        sprintf "%s, %s, %i, %.2f, %.2f, %.2f, %.5f, %i, %i, %.10f, %.10f, %i, %s, %.2f, %.2f, %A"
             (elementLog.RecordsLog.Date.ToString("yyyy-MM-dd"))
             elementLog.RecordsLog.Ticker
             elementLog.RecordsLog.Count
@@ -137,7 +137,7 @@ let emitElementLog (elementLog : ElementLog<MetricsLog>) =
             elementLog.RecordsLog.DeltaHi
             elementLog.RecordsLog.DeltaLo
             elementLog.RecordsLog.Shares
-            elementLog.RecordsLog.StopLoss
+            (match elementLog.RecordsLog.StopLoss with None -> "" | Some value -> sprintf "%.2f" value)
             elementLog.MetricsLog.Res
             elementLog.MetricsLog.Sup
             elementLog.MetricsLog.Trending
