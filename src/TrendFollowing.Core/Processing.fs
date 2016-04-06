@@ -8,8 +8,8 @@ open TrendFollowing.Types
 
 let private chooseTakeOrder = function Take order -> Some order | _ -> None
 let private chooseExitOrder = function Exit order -> Some order | _ -> None
-let private positive = (+) 0
-let private negative = (-) 0
+
+let inline private negate value = LanguagePrimitives.GenericZero - value
 
 //-------------------------------------------------------------------------------------------------
 
@@ -93,10 +93,11 @@ let computeElementLog system orders (tradingLogs : TradingLog[]) prevElementLogs
 
 let computeSummaryLog date (tradingLogs : TradingLog[]) elementLogs prevSummaryLog =
 
-    let cashAdjustmentValue =
+    let cashValueAdjustment =
         tradingLogs
         |> Seq.map (fun x -> decimal x.Shares * x.Price)
         |> Seq.sum
+        |> negate
 
     let positionValueEquity =
         elementLogs
@@ -110,7 +111,7 @@ let computeSummaryLog date (tradingLogs : TradingLog[]) elementLogs prevSummaryL
         |> Seq.map (fun x -> decimal x.Shares * x.StopLoss)
         |> Seq.sum
 
-    let cash = prevSummaryLog.Cash - cashAdjustmentValue
+    let cash = prevSummaryLog.Cash + cashValueAdjustment
     let equity = cash + positionValueEquity
     let exitValue = cash + positionValueAtExit
     let peak = max prevSummaryLog.Peak exitValue
@@ -132,7 +133,7 @@ let processTakeOrders (orders : Order[]) (quotes : Quote[]) =
     let executeOrder (order : TakeOrder) (quote : Quote) =
         { Date   = quote.Date
           Ticker = order.Ticker
-          Shares = order.Shares |> positive
+          Shares = order.Shares
           Price  = quote.Hi }
 
     let processOrder (order : TakeOrder) =
@@ -150,7 +151,7 @@ let processExitOrders (orders : Order[]) (quotes : Quote[]) =
     let executeOrder (order : ExitOrder) (quote : Quote) =
         { Date   = quote.Date
           Ticker = order.Ticker
-          Shares = order.Shares |> negative
+          Shares = order.Shares |> negate
           Price  = order.StopLoss }
 
     let processOrder (order : ExitOrder) =
@@ -176,7 +177,7 @@ let processTermTrades date prevElementLogs (quotes : Quote[]) =
     let executeTrade prevElementLog =
         { Date   = date
           Ticker = prevElementLog.RecordsLog.Ticker
-          Shares = prevElementLog.RecordsLog.Shares |> negative
+          Shares = prevElementLog.RecordsLog.Shares |> negate
           Price  = prevElementLog.RecordsLog.Close }
 
     prevElementLogs
