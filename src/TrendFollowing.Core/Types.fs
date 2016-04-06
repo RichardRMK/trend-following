@@ -11,19 +11,19 @@ type Quote =
       Lo         : decimal
       Close      : decimal
       Dividend   : decimal option
-      SplitNew   : int option
-      SplitOld   : int option }
+      SplitNew   : uint32 option
+      SplitOld   : uint32 option }
 
 type RecordsLog =
     { Date       : DateTime
       Ticker     : string
-      Count      : int
+      Count      : uint32
       Hi         : decimal
       Lo         : decimal
       Close      : decimal
       Dividend   : decimal
-      SplitNew   : int
-      SplitOld   : int
+      SplitNew   : uint32
+      SplitOld   : uint32
       DeltaHi    : decimal
       DeltaLo    : decimal
       Shares     : int

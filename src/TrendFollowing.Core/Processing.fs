@@ -20,13 +20,13 @@ let private computeRecordsLogInit (quote : Quote) (exitOrder : ExitOrder option)
 
     { Date     = quote.Date
       Ticker   = quote.Ticker
-      Count    = 1
+      Count    = 1u
       Hi       = quote.Hi
       Lo       = quote.Lo
       Close    = quote.Close
       Dividend = 0m
-      SplitNew = 1
-      SplitOld = 1
+      SplitNew = 1u
+      SplitOld = 1u
       DeltaHi  = 0m
       DeltaLo  = 0m
       Shares   = shares
@@ -34,7 +34,7 @@ let private computeRecordsLogInit (quote : Quote) (exitOrder : ExitOrder option)
 
 let private computeRecordsLogNext (quote : Quote) (exitOrder : ExitOrder option) (tradingLogs : TradingLog[]) prevRecordsLog =
 
-    let count = prevRecordsLog.Count + 1
+    let count = prevRecordsLog.Count + 1u
     let deltaHi = (quote.Hi / prevRecordsLog.Hi) - 1m
     let deltaLo = (quote.Lo / prevRecordsLog.Lo) - 1m
 
@@ -48,8 +48,8 @@ let private computeRecordsLogNext (quote : Quote) (exitOrder : ExitOrder option)
       Lo       = quote.Lo
       Close    = quote.Close
       Dividend = 0m
-      SplitNew = 1
-      SplitOld = 1
+      SplitNew = 1u
+      SplitOld = 1u
       DeltaHi  = deltaHi
       DeltaLo  = deltaLo
       Shares   = shares
