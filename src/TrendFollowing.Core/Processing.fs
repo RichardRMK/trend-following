@@ -38,9 +38,7 @@ let private computeRecordsLogNext (quote : Quote) (exitOrder : ExitOrder option)
     let deltaHi = (quote.Hi / prevRecordsLog.Hi) - 1m
     let deltaLo = (quote.Lo / prevRecordsLog.Lo) - 1m
 
-    let sharesAdjustment = tradingLogs |> Seq.sumBy (fun x -> x.Shares)
-    let sharesPreviously = prevRecordsLog.Shares
-    let shares = sharesPreviously + sharesAdjustment
+    let shares = tradingLogs |> Seq.sumBy (fun x -> x.Shares) |> (+) prevRecordsLog.Shares
     let stopLoss = if exitOrder.IsNone then 0m else exitOrder.Value.StopLoss
 
     { Date     = quote.Date
