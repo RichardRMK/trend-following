@@ -26,7 +26,7 @@ type RecordsLog =
       SplitOld   : uint32
       DeltaHi    : decimal
       DeltaLo    : decimal
-      Shares     : int
+      Shares     : uint32
       StopLoss   : decimal option }
 
 type ElementLog<'T> =
@@ -50,11 +50,11 @@ type TradingLog =
 
 type TakeOrder =
     { Ticker     : string
-      Shares     : int }
+      Shares     : uint32 }
 
 type ExitOrder =
     { Ticker     : string
-      Shares     : int
+      Shares     : uint32
       StopLoss   : decimal }
 
 type Order =

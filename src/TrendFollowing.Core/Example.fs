@@ -40,7 +40,7 @@ let computeMetricsLog (recordsLog : RecordsLog) = function
 let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : SummaryLog) : TakeOrder[] =
 
     match summaryLog.Date with
-    | date when date = DateTime(2016, 01, 06) -> [| { Ticker = "A1"; Shares = 100 } |]
+    | date when date = DateTime(2016, 01, 06) -> [| { Ticker = "A1"; Shares = 100u } |]
     | _ -> Array.empty
 
 let calculateStopLoss (elementLog : ElementLog<MetricsLog>) : decimal =

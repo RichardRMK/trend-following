@@ -6,16 +6,25 @@ open TrendFollowing.Types
 
 //-------------------------------------------------------------------------------------------------
 
+let inline private negate value = LanguagePrimitives.GenericZero - value
+
 let private chooseTakeOrder = function Take order -> Some order | _ -> None
 let private chooseExitOrder = function Exit order -> Some order | _ -> None
 
-let inline private negate value = LanguagePrimitives.GenericZero - value
+let private forTakePosition = int
+let private forExitPosition = int >> negate
+
+let private computeShares prevShares (tradingLogs : TradingLog[]) =
+    tradingLogs
+    |> Seq.sumBy (fun x -> x.Shares)
+    |> (+) (int prevShares)
+    |> Checked.uint32
 
 //-------------------------------------------------------------------------------------------------
 
 let private computeRecordsLogInit (quote : Quote) (exitOrder : ExitOrder option) (tradingLogs : TradingLog[]) =
 
-    let shares = tradingLogs |> Seq.sumBy (fun x -> x.Shares)
+    let shares = tradingLogs |> computeShares 0u
     let stopLoss = exitOrder |> Option.map (fun x -> x.StopLoss)
 
     { Date     = quote.Date
@@ -38,7 +47,7 @@ let private computeRecordsLogNext (quote : Quote) (exitOrder : ExitOrder option)
     let deltaHi = (quote.Hi / prevRecordsLog.Hi) - 1m
     let deltaLo = (quote.Lo / prevRecordsLog.Lo) - 1m
 
-    let shares = tradingLogs |> Seq.sumBy (fun x -> x.Shares) |> (+) prevRecordsLog.Shares
+    let shares = tradingLogs |> computeShares prevRecordsLog.Shares
     let stopLoss = exitOrder |> Option.map (fun x -> x.StopLoss)
 
     { Date     = quote.Date
@@ -100,7 +109,7 @@ let computeSummaryLog date (tradingLogs : TradingLog[]) elementLogs prevSummaryL
         |> negate
 
     let position elementLog =
-        elementLog.RecordsLog.Shares <> 0
+        elementLog.RecordsLog.Shares <> 0u
 
     let positionValueEquity =
         elementLogs
@@ -138,7 +147,7 @@ let processTakeOrders (orders : Order[]) (quotes : Quote[]) =
     let executeOrder (order : TakeOrder) (quote : Quote) =
         { Date   = quote.Date
           Ticker = order.Ticker
-          Shares = order.Shares
+          Shares = order.Shares |> forTakePosition
           Price  = quote.Hi }
 
     let processOrder (order : TakeOrder) =
@@ -156,7 +165,7 @@ let processExitOrders (orders : Order[]) (quotes : Quote[]) =
     let executeOrder (order : ExitOrder) (quote : Quote) =
         { Date   = quote.Date
           Ticker = order.Ticker
-          Shares = order.Shares |> negate
+          Shares = order.Shares |> forExitPosition
           Price  = order.StopLoss }
 
     let processOrder (order : ExitOrder) =
@@ -177,12 +186,12 @@ let processTermTrades date prevElementLogs (quotes : Quote[]) =
         |> not
 
     let openPosition prevElementLog =
-        prevElementLog.RecordsLog.Shares <> 0
+        prevElementLog.RecordsLog.Shares <> 0u
 
     let executeTrade prevElementLog =
         { Date   = date
           Ticker = prevElementLog.RecordsLog.Ticker
-          Shares = prevElementLog.RecordsLog.Shares |> negate
+          Shares = prevElementLog.RecordsLog.Shares |> forExitPosition
           Price  = prevElementLog.RecordsLog.Close }
 
     prevElementLogs
@@ -200,7 +209,7 @@ let computeExitOrders system elementLogs (takeOrders : TakeOrder[]) =
     let computeShares (elementLog : ElementLog<'T>) =
         takeOrders
         |> Array.tryFind (fun x -> x.Ticker = elementLog.RecordsLog.Ticker)
-        |> function None -> 0 | Some takeOrder -> takeOrder.Shares
+        |> function None -> 0u | Some takeOrder -> takeOrder.Shares
         |> (+) elementLog.RecordsLog.Shares
 
     let generateOrder (elementLog, shares) =
@@ -210,7 +219,7 @@ let computeExitOrders system elementLogs (takeOrders : TakeOrder[]) =
 
     elementLogs
     |> Array.map (fun elementLog -> elementLog, computeShares elementLog)
-    |> Array.filter (fun (_, shares) -> shares <> 0)
+    |> Array.filter (fun (_, shares) -> shares <> 0u)
     |> Array.map generateOrder
 
 //-------------------------------------------------------------------------------------------------
