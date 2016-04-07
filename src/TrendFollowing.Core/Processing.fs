@@ -14,18 +14,23 @@ let private chooseExitOrder = function Exit order -> Some order | _ -> None
 let private forTakePosition = int
 let private forExitPosition = int >> negate
 
+//-------------------------------------------------------------------------------------------------
+
 let private computeShares prevShares (tradingLogs : TradingLog[]) =
     tradingLogs
     |> Seq.sumBy (fun x -> x.Shares)
     |> (+) (int prevShares)
     |> Checked.uint32
 
+let private computeStopLoss (exitOrder : ExitOrder option) =
+    exitOrder |> Option.map (fun x -> x.StopLoss)
+
 //-------------------------------------------------------------------------------------------------
 
-let private computeRecordsLogInit (quote : Quote) (exitOrder : ExitOrder option) (tradingLogs : TradingLog[]) =
+let private computeRecordsLogInit (quote : Quote) exitOrder tradingLogs =
 
     let shares = tradingLogs |> computeShares 0u
-    let stopLoss = exitOrder |> Option.map (fun x -> x.StopLoss)
+    let stopLoss = exitOrder |> computeStopLoss
 
     { Date     = quote.Date
       Ticker   = quote.Ticker
@@ -41,14 +46,14 @@ let private computeRecordsLogInit (quote : Quote) (exitOrder : ExitOrder option)
       Shares   = shares
       StopLoss = stopLoss }
 
-let private computeRecordsLogNext (quote : Quote) (exitOrder : ExitOrder option) (tradingLogs : TradingLog[]) prevRecordsLog =
+let private computeRecordsLogNext (quote : Quote) exitOrder tradingLogs prevRecordsLog =
 
     let count = prevRecordsLog.Count + 1u
     let deltaHi = (quote.Hi / prevRecordsLog.Hi) - 1m
     let deltaLo = (quote.Lo / prevRecordsLog.Lo) - 1m
 
     let shares = tradingLogs |> computeShares prevRecordsLog.Shares
-    let stopLoss = exitOrder |> Option.map (fun x -> x.StopLoss)
+    let stopLoss = exitOrder |> computeStopLoss
 
     { Date     = quote.Date
       Ticker   = quote.Ticker
@@ -64,7 +69,7 @@ let private computeRecordsLogNext (quote : Quote) (exitOrder : ExitOrder option)
       Shares   = shares
       StopLoss = stopLoss }
 
-let computeRecordsLog (quote : Quote) (exitOrder : ExitOrder option) (tradingLogs : TradingLog[]) = function
+let computeRecordsLog (quote : Quote) exitOrder tradingLogs = function
     | None      -> computeRecordsLogInit quote exitOrder tradingLogs
     | Some prev -> computeRecordsLogNext quote exitOrder tradingLogs prev
 
@@ -182,7 +187,7 @@ let processTermTrades date prevElementLogs (quotes : Quote[]) =
 
     let isTerminated prevElementLog =
         quotes
-        |> Array.exists (fun x -> x.Ticker = prevElementLog.RecordsLog.Ticker)
+        |> Array.exists (fun quote -> quote.Ticker = prevElementLog.RecordsLog.Ticker)
         |> not
 
     let openPosition prevElementLog =
@@ -206,7 +211,7 @@ let computeTakeOrders system elementLogs summaryLog =
 
 let computeExitOrders system elementLogs (takeOrders : TakeOrder[]) =
 
-    let computeShares (elementLog : ElementLog<'T>) =
+    let computeShares elementLog =
         takeOrders
         |> Array.tryFind (fun x -> x.Ticker = elementLog.RecordsLog.Ticker)
         |> function None -> 0u | Some takeOrder -> takeOrder.Shares
