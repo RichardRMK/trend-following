@@ -1,7 +1,6 @@
 ﻿module TrendFollowing.Example
 
 open System
-open System.IO
 open TrendFollowing.Types
 
 //-------------------------------------------------------------------------------------------------
@@ -113,65 +112,6 @@ let getQuotes date =
 
 //-------------------------------------------------------------------------------------------------
 
-let outputPath = Environment.GetEnvironmentVariable("UserProfile") + @"\Desktop\Example\"
-
-let headerElementLog = "Date, Ticker, Count, Hi, Lo, Close, Dividend, SplitNew, SplitOld, DeltaHi, DeltaLo, Shares, StopLoss, Res, Sup, Trending"
-let headerSummaryLog = "Date, Cash, Equity, ExitValue, Peak, Drawdown, Leverage"
-let headerTradingLog = "Date, Ticker, Shares, Price"
-
-let emitElementLog (elementLog : ElementLog<MetricsLog>) =
-    let path = outputPath + "ElementLog-" + elementLog.RecordsLog.Ticker + ".csv"
-    if (Directory.Exists(outputPath) = false) then Directory.CreateDirectory(outputPath) |> ignore
-    if (File.Exists(path) = false) then File.WriteAllLines(path, [ headerElementLog ])
-    let content =
-        sprintf "%s, %s, %i, %.2f, %.2f, %.2f, %.5f, %i, %i, %.10f, %.10f, %i, %s, %.2f, %.2f, %A"
-            (elementLog.RecordsLog.Date.ToString("yyyy-MM-dd"))
-            elementLog.RecordsLog.Ticker
-            elementLog.RecordsLog.Count
-            elementLog.RecordsLog.Hi
-            elementLog.RecordsLog.Lo
-            elementLog.RecordsLog.Close
-            elementLog.RecordsLog.Dividend
-            elementLog.RecordsLog.SplitNew
-            elementLog.RecordsLog.SplitOld
-            elementLog.RecordsLog.DeltaHi
-            elementLog.RecordsLog.DeltaLo
-            elementLog.RecordsLog.Shares
-            (match elementLog.RecordsLog.StopLoss with None -> "" | Some value -> sprintf "%.2f" value)
-            elementLog.MetricsLog.Res
-            elementLog.MetricsLog.Sup
-            elementLog.MetricsLog.Trending
-    File.AppendAllLines(path, [ content ])
-
-let emitSummaryLog (summaryLog : SummaryLog) =
-    let path = outputPath + "SummaryLog.csv"
-    if (Directory.Exists(outputPath) = false) then Directory.CreateDirectory(outputPath) |> ignore
-    if (File.Exists(path) = false) then File.WriteAllLines(path, [ headerSummaryLog ])
-    let content =
-        sprintf "%s, %.2f, %.2f, %.2f, %.2f, %10f, %10f"
-            (summaryLog.Date.ToString("yyyy-MM-dd"))
-            summaryLog.Cash
-            summaryLog.Equity
-            summaryLog.ExitValue
-            summaryLog.Peak
-            summaryLog.Drawdown
-            summaryLog.Leverage
-    File.AppendAllLines(path, [ content ])
-
-let emitTradingLog (tradingLog : TradingLog) =
-    let path = outputPath + "TradingLog.csv"
-    if (Directory.Exists(outputPath) = false) then Directory.CreateDirectory(outputPath) |> ignore
-    if (File.Exists(path) = false) then File.WriteAllLines(path, [ headerTradingLog ])
-    let content =
-        sprintf "%s, %s, %i, %.2f"
-            (tradingLog.Date.ToString("yyyy-MM-dd"))
-            tradingLog.Ticker
-            tradingLog.Shares
-            tradingLog.Price
-    File.AppendAllLines(path, [ content ])
-
-//-------------------------------------------------------------------------------------------------
-
 let system =
     { Principal         = 100000m
       DateSequence      = dateSequence
@@ -179,6 +119,6 @@ let system =
       ComputeMetricsLog = computeMetricsLog
       ComputeTakeOrders = computeTakeOrders
       CalculateStopLoss = calculateStopLoss
-      EmitElementLog    = emitElementLog
-      EmitSummaryLog    = emitSummaryLog
-      EmitTradingLog    = emitTradingLog }
+      EmitElementLog    = Output.emitElementLog
+      EmitSummaryLog    = Output.emitSummaryLog
+      EmitTradingLog    = Output.emitTradingLog }

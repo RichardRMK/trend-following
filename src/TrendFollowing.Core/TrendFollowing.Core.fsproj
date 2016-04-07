@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="Types.fs" />
     <Compile Include="Processing.fs" />
+    <Compile Include="Output.fs" />
     <Compile Include="Example.fs" />
   </ItemGroup>
   <PropertyGroup>
