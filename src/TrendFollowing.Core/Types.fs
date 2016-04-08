@@ -70,6 +70,6 @@ type System<'T> =
       ComputeMetricsLog : RecordsLog -> 'T option -> 'T
       ComputeTakeOrders : ElementLog<'T>[] -> SummaryLog -> TakeOrder[]
       CalculateStopLoss : ElementLog<'T> -> decimal
-      EmitElementLog    : ElementLog<'T> -> unit
-      EmitSummaryLog    : SummaryLog -> unit
-      EmitTradingLog    : TradingLog -> unit }
+      ReportElementLog  : ElementLog<'T> -> unit
+      ReportSummaryLog  : SummaryLog -> unit
+      ReportTradingLog  : TradingLog -> unit }

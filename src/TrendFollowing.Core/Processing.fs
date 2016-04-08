@@ -229,13 +229,13 @@ let computeExitOrders system elementLogs (takeOrders : TakeOrder[]) =
 
 //-------------------------------------------------------------------------------------------------
 
-let private emitResult system (tradingLogs, elementLogs, summaryLog, _) =
+let private reportResult system (tradingLogs, elementLogs, summaryLog, _) =
 
-    tradingLogs |> Array.iter system.EmitTradingLog
-    elementLogs |> Array.iter system.EmitElementLog
-    summaryLog |> system.EmitSummaryLog
+    tradingLogs |> Array.iter system.ReportTradingLog
+    elementLogs |> Array.iter system.ReportElementLog
+    summaryLog |> system.ReportSummaryLog
 
-let runSingleDate system (_, prevElementLogs, prevSummaryLog, orders) date =
+let runIncrement system (_, prevElementLogs, prevSummaryLog, orders) date =
 
     let quotes = system.GetQuotes date
 
@@ -272,5 +272,5 @@ let runSimulation system =
     let nextOrders = Array.empty
 
     system.DateSequence
-    |> Seq.scan (system |> runSingleDate) (tradingLogs, elementLogs, summaryLog, nextOrders)
-    |> Seq.iter (system |> emitResult)
+    |> Seq.scan (system |> runIncrement) (tradingLogs, elementLogs, summaryLog, nextOrders)
+    |> Seq.iter (system |> reportResult)

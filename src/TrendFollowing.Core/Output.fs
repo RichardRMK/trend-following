@@ -50,7 +50,7 @@ let private getValues logs =
 
 //-------------------------------------------------------------------------------------------------
 
-let private emitLog logs filename =
+let private report logs filename =
 
     let titles = getTitles logs
     let values = getValues logs
@@ -66,17 +66,17 @@ let private emitLog logs filename =
 
 //-------------------------------------------------------------------------------------------------
 
-let emitElementLog (elementLog : ElementLog<_>) =
+let reportElementLog (elementLog : ElementLog<_>) =
     let logs : obj list = [ elementLog.RecordsLog; elementLog.MetricsLog ]
     let filename = filename<ElementLog<_>> + "-" + elementLog.RecordsLog.Ticker
-    emitLog logs filename
+    report logs filename
 
-let emitSummaryLog (summaryLog : SummaryLog) =
+let reportSummaryLog (summaryLog : SummaryLog) =
     let logs : obj list = [ summaryLog ]
     let filename = filename<SummaryLog>
-    emitLog logs filename
+    report logs filename
 
-let emitTradingLog (tradingLog : TradingLog) =
+let reportTradingLog (tradingLog : TradingLog) =
     let logs : obj list = [ tradingLog ]
     let filename = filename<TradingLog>
-    emitLog logs filename
+    report logs filename

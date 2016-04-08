@@ -2,6 +2,7 @@
 
 open System
 open TrendFollowing.Types
+open TrendFollowing.Output
 
 //-------------------------------------------------------------------------------------------------
 
@@ -119,6 +120,6 @@ let system =
       ComputeMetricsLog = computeMetricsLog
       ComputeTakeOrders = computeTakeOrders
       CalculateStopLoss = calculateStopLoss
-      EmitElementLog    = Output.emitElementLog
-      EmitSummaryLog    = Output.emitSummaryLog
-      EmitTradingLog    = Output.emitTradingLog }
+      ReportElementLog  = reportElementLog
+      ReportSummaryLog  = reportSummaryLog
+      ReportTradingLog  = reportTradingLog }
