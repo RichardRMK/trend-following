@@ -1,0 +1,9 @@
+﻿<NUnitProject>
+  <Settings activeconfig="Debug" />
+  <Config name="Debug" configfile="build\bin\AnyCPU\Debug\TrendFollowing.Core.Tests.dll.config" binpathtype="Auto">
+    <assembly path="build\bin\AnyCPU\Debug\TrendFollowing.Core.Tests.dll" />
+  </Config>
+  <Config name="Release" configfile="build\bin\AnyCPU\Release\TrendFollowing.Core.Tests.dll.config" binpathtype="Auto">
+    <assembly path="build\bin\AnyCPU\Release\TrendFollowing.Core.Tests.dll" />
+  </Config>
+</NUnitProject>
