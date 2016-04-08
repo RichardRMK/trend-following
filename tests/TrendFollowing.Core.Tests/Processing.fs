@@ -25,7 +25,6 @@ let private toQuote ticker (date, hi, lo, close, dividend, splitNew, splitOld) :
 let ``Run increment`` () =
 
     let date = DateTime(2000, 01, 01)
-    let dateSequence = [| date |]
 
     let quotes =
         [| date, 100.00m, 100.00m, 100.00m, None, None, None |]
@@ -35,18 +34,13 @@ let ``Run increment`` () =
         quotes
         |> Array.filter (fun x -> x.Date = date)
 
-    let system =
-        { Principal         = 100000m
-          DateSequence      = dateSequence
-          GetQuotes         = getQuotes
+    let model =
+        { GetQuotes         = getQuotes
           ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = (fun _ _ -> Array.empty)
-          CalculateStopLoss = (fun _ -> 0m)
-          ReportElementLog  = (fun _ -> ())
-          ReportSummaryLog  = (fun _ -> ())
-          ReportTradingLog  = (fun _ -> ()) }
+          CalculateStopLoss = (fun _ -> 0m) }
 
-    let prevSummaryLog =
+    let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 100000m
           Equity    = 100000m
@@ -55,8 +49,8 @@ let ``Run increment`` () =
           Drawdown  = 0m
           Leverage  = 0m }
 
-    let prevState = (Array.empty, Array.empty, prevSummaryLog, Array.empty)
-    let nextState = date |> runIncrement system prevState
+    let prevState = (Array.empty, Array.empty, summaryLog, Array.empty)
+    let nextState = date |> runIncrement model prevState
     let (tradingLogs, elementLogs, summaryLog, nextOrders) = nextState
 
     tradingLogs |> Array.length |> should equal 0

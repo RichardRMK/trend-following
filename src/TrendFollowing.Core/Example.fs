@@ -101,25 +101,28 @@ let quotesB1 =
 let quotes =
     Array.concat [ quotesA1; quotesB1 ]
 
-let dateSequence =
+let getQuotes date =
+    quotes
+    |> Array.filter (fun x -> x.Date = date)
+
+let dates =
     quotes
     |> Array.map (fun x -> x.Date)
     |> Array.distinct
     |> Array.sort
 
-let getQuotes date =
-    quotes
-    |> Array.filter (fun x -> x.Date = date)
-
 //-------------------------------------------------------------------------------------------------
 
-let system =
-    { Principal         = 100000m
-      DateSequence      = dateSequence
-      GetQuotes         = getQuotes
+let model =
+    { GetQuotes         = getQuotes
       ComputeMetricsLog = computeMetricsLog
       ComputeTakeOrders = computeTakeOrders
-      CalculateStopLoss = calculateStopLoss
+      CalculateStopLoss = calculateStopLoss }
+
+let simulation =
+    { Principal         = 100000m
+      Dates             = dates
+      Model             = model
       ReportElementLog  = reportElementLog
       ReportSummaryLog  = reportSummaryLog
       ReportTradingLog  = reportTradingLog }

@@ -4,4 +4,4 @@ open TrendFollowing
 
 //-------------------------------------------------------------------------------------------------
 
-Processing.runSimulation Example.system
+Processing.runSimulation Example.simulation

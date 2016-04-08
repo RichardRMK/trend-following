@@ -63,13 +63,16 @@ type Order =
 
 //-------------------------------------------------------------------------------------------------
 
-type System<'T> =
-    { Principal         : decimal
-      DateSequence      : DateTime seq
-      GetQuotes         : DateTime -> Quote[]
+type Model<'T> =
+    { GetQuotes         : DateTime -> Quote[]
       ComputeMetricsLog : RecordsLog -> 'T option -> 'T
       ComputeTakeOrders : ElementLog<'T>[] -> SummaryLog -> TakeOrder[]
-      CalculateStopLoss : ElementLog<'T> -> decimal
+      CalculateStopLoss : ElementLog<'T> -> decimal }
+
+type Simulation<'T> =
+    { Principal         : decimal
+      Dates             : DateTime seq
+      Model             : Model<'T>
       ReportElementLog  : ElementLog<'T> -> unit
       ReportSummaryLog  : SummaryLog -> unit
       ReportTradingLog  : TradingLog -> unit }

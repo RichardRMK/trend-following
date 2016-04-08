@@ -1,7 +1,6 @@
 ﻿module TrendFollowing.Processing
 
 open System
-open System.Collections.Generic
 open TrendFollowing.Types
 
 //-------------------------------------------------------------------------------------------------
@@ -75,7 +74,7 @@ let computeRecordsLog (quote : Quote) exitOrder tradingLogs = function
 
 //-------------------------------------------------------------------------------------------------
 
-let computeElementLog system orders (tradingLogs : TradingLog[]) prevElementLogs (quote : Quote) =
+let computeElementLog model orders (tradingLogs : TradingLog[]) prevElementLogs (quote : Quote) =
 
     let prevElementLog =
         prevElementLogs
@@ -98,7 +97,7 @@ let computeElementLog system orders (tradingLogs : TradingLog[]) prevElementLogs
     let metricsLog =
         prevElementLog
         |> Option.map (fun x -> x.MetricsLog)
-        |> system.ComputeMetricsLog recordsLog
+        |> model.ComputeMetricsLog recordsLog
 
     { RecordsLog = recordsLog
       MetricsLog = metricsLog }
@@ -206,10 +205,10 @@ let processTermTrades date prevElementLogs (quotes : Quote[]) =
 
 //-------------------------------------------------------------------------------------------------
 
-let computeTakeOrders system elementLogs summaryLog =
-    system.ComputeTakeOrders elementLogs summaryLog
+let computeTakeOrders model elementLogs summaryLog =
+    model.ComputeTakeOrders elementLogs summaryLog
 
-let computeExitOrders system elementLogs (takeOrders : TakeOrder[]) =
+let computeExitOrders model elementLogs (takeOrders : TakeOrder[]) =
 
     let computeShares elementLog =
         takeOrders
@@ -220,7 +219,7 @@ let computeExitOrders system elementLogs (takeOrders : TakeOrder[]) =
     let generateOrder (elementLog, shares) =
         { Ticker = elementLog.RecordsLog.Ticker
           Shares = shares
-          StopLoss = system.CalculateStopLoss elementLog }
+          StopLoss = model.CalculateStopLoss elementLog }
 
     elementLogs
     |> Array.map (fun elementLog -> elementLog, computeShares elementLog)
@@ -229,15 +228,9 @@ let computeExitOrders system elementLogs (takeOrders : TakeOrder[]) =
 
 //-------------------------------------------------------------------------------------------------
 
-let private reportResult system (tradingLogs, elementLogs, summaryLog, _) =
+let runIncrement model (_, prevElementLogs, prevSummaryLog, orders) date =
 
-    tradingLogs |> Array.iter system.ReportTradingLog
-    elementLogs |> Array.iter system.ReportElementLog
-    summaryLog |> system.ReportSummaryLog
-
-let runIncrement system (_, prevElementLogs, prevSummaryLog, orders) date =
-
-    let quotes = system.GetQuotes date
+    let quotes = model.GetQuotes date
 
     let tradingLogsTake = quotes |> processTakeOrders orders
     let tradingLogsExit = quotes |> processExitOrders orders
@@ -245,32 +238,36 @@ let runIncrement system (_, prevElementLogs, prevSummaryLog, orders) date =
     let tradingLogs =
         Array.concat [ tradingLogsTake; tradingLogsExit; tradingLogsTerm ]
 
-    let elementLogs = quotes |> Array.map (computeElementLog system orders tradingLogs prevElementLogs)
+    let elementLogs = quotes |> Array.map (computeElementLog model orders tradingLogs prevElementLogs)
     let summaryLog = computeSummaryLog date tradingLogs elementLogs prevSummaryLog
 
-    let takeOrders = computeTakeOrders system elementLogs summaryLog
-    let exitOrders = computeExitOrders system elementLogs takeOrders
+    let takeOrders = computeTakeOrders model elementLogs summaryLog
+    let exitOrders = computeExitOrders model elementLogs takeOrders
     let nextOrders =
         Array.concat [ Array.map Take takeOrders; Array.map Exit exitOrders ]
 
     (tradingLogs, elementLogs, summaryLog, nextOrders)
 
-let runSimulation system =
+let runSimulation simulation =
 
-    let initializeSummaryLog principal =
+    let reportResults (tradingLogs, elementLogs, summaryLog, _) =
+        tradingLogs |> Array.iter simulation.ReportTradingLog
+        elementLogs |> Array.iter simulation.ReportElementLog
+        summaryLog |> simulation.ReportSummaryLog
+
+    let summaryLog =
         { Date      = DateTime.MinValue
-          Cash      = principal
-          Equity    = principal
-          ExitValue = principal
-          Peak      = principal
+          Cash      = simulation.Principal
+          Equity    = simulation.Principal
+          ExitValue = simulation.Principal
+          Peak      = simulation.Principal
           Drawdown  = 0m
           Leverage  = 0m }
 
     let tradingLogs = Array.empty
     let elementLogs = Array.empty
-    let summaryLog = initializeSummaryLog system.Principal
     let nextOrders = Array.empty
 
-    system.DateSequence
-    |> Seq.scan (system |> runIncrement) (tradingLogs, elementLogs, summaryLog, nextOrders)
-    |> Seq.iter (system |> reportResult)
+    simulation.Dates
+    |> Seq.scan (runIncrement simulation.Model) (tradingLogs, elementLogs, summaryLog, nextOrders)
+    |> Seq.iter reportResults
