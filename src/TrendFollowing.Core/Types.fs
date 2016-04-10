@@ -27,7 +27,7 @@ type RecordsLog =
       DeltaHi    : decimal
       DeltaLo    : decimal
       Shares     : uint32
-      StopLoss   : decimal option }
+      ExitStop   : decimal option }
 
 type ElementLog<'T> =
     { RecordsLog : RecordsLog
@@ -55,7 +55,7 @@ type TakeOrder =
 type ExitOrder =
     { Ticker     : string
       Shares     : uint32
-      StopLoss   : decimal }
+      Stop       : decimal }
 
 type Order =
     | Take of TakeOrder
@@ -67,7 +67,7 @@ type Model<'T> =
     { GetQuotes         : DateTime -> Quote[]
       ComputeMetricsLog : RecordsLog -> 'T option -> 'T
       ComputeTakeOrders : ElementLog<'T>[] -> SummaryLog -> TakeOrder[]
-      CalculateStopLoss : ElementLog<'T> -> decimal }
+      CalculateExitStop : ElementLog<'T> -> decimal }
 
 type Simulation<'T> =
     { Principal         : decimal

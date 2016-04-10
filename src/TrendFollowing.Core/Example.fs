@@ -44,7 +44,7 @@ let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : Sum
     | date when date = DateTime(2016, 01, 06) -> [| { Ticker = "A1"; Shares = 100u } |]
     | _ -> Array.empty
 
-let calculateStopLoss (elementLog : ElementLog<MetricsLog>) : decimal =
+let calculateExitStop (elementLog : ElementLog<MetricsLog>) : decimal =
 
     match elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date with
     | "A1", date when date = DateTime(2016, 01, 06) -> 100.50m
@@ -55,7 +55,7 @@ let calculateStopLoss (elementLog : ElementLog<MetricsLog>) : decimal =
     | "A1", date when date = DateTime(2016, 01, 13) -> 105.50m
     | "A1", date when date = DateTime(2016, 01, 14) -> 106.50m
     | "A1", date when date = DateTime(2016, 01, 15) -> 107.50m
-    | _ -> failwith "Unexpected element."
+    | _ -> failwith "Unexpected call."
 
 //-------------------------------------------------------------------------------------------------
 
@@ -117,7 +117,7 @@ let model =
     { GetQuotes         = getQuotes
       ComputeMetricsLog = computeMetricsLog
       ComputeTakeOrders = computeTakeOrders
-      CalculateStopLoss = calculateStopLoss }
+      CalculateExitStop = calculateExitStop }
 
 let simulation =
     { Principal         = 100000m

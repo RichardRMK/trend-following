@@ -43,7 +43,7 @@ let ``Baseline increment 1`` () =
         { GetQuotes         = getQuotes
           ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = (fun _ _ -> Array.empty)
-          CalculateStopLoss = (fun _ -> unexpectedCall ()) }
+          CalculateExitStop = (fun _ -> unexpectedCall ()) }
 
     let summaryLog =
         { Date      = DateTime.MinValue
@@ -79,7 +79,7 @@ let ``Baseline increment 1`` () =
     recordsLog.DeltaHi   |> should equal 0m
     recordsLog.DeltaLo   |> should equal 0m
     recordsLog.Shares    |> should equal 0u
-    recordsLog.StopLoss  |> should equal None
+    recordsLog.ExitStop  |> should equal None
 
     summaryLog.Date      |> should equal date1
     summaryLog.Cash      |> should equal 1000000.00m
@@ -110,7 +110,7 @@ let ``Baseline increment 2`` () =
         { GetQuotes         = getQuotes
           ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = (fun _ _ -> Array.empty)
-          CalculateStopLoss = (fun _ -> unexpectedCall ()) }
+          CalculateExitStop = (fun _ -> unexpectedCall ()) }
 
     let summaryLog =
         { Date      = DateTime.MinValue
@@ -147,7 +147,7 @@ let ``Baseline increment 2`` () =
     recordsLog.DeltaHi   |> should equal (1.00m / 101.00m)
     recordsLog.DeltaLo   |> should equal (1.00m / 100.00m)
     recordsLog.Shares    |> should equal 0u
-    recordsLog.StopLoss  |> should equal None
+    recordsLog.ExitStop  |> should equal None
 
     summaryLog.Date      |> should equal date2
     summaryLog.Cash      |> should equal 1000000.00m
@@ -178,7 +178,7 @@ let ``Compute delta, price move`` () =
         { GetQuotes         = getQuotes
           ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = (fun _ _ -> Array.empty)
-          CalculateStopLoss = (fun _ -> unexpectedCall ()) }
+          CalculateExitStop = (fun _ -> unexpectedCall ()) }
 
     let summaryLog =
         { Date      = DateTime.MinValue
@@ -207,7 +207,7 @@ let ``Compute delta, price move`` () =
     recordsLog.DeltaHi   |> should equal 0.05m
     recordsLog.DeltaLo   |> should equal 0.02m
     recordsLog.Shares    |> should equal 0u
-    recordsLog.StopLoss  |> should equal None
+    recordsLog.ExitStop  |> should equal None
 
 //-------------------------------------------------------------------------------------------------
 
@@ -266,7 +266,7 @@ let ``Process orders, take position`` () =
         | date when date = date1 -> [| { Ticker = "X"; Shares = 100u } |]
         | _ -> Array.empty
 
-    let calculateStopLoss elementLog =
+    let calculateExitStop elementLog =
         match (elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date) with
         | "X", date when date = date1 -> 100.01m
         | "X", date when date = date2 -> 100.02m
@@ -276,7 +276,7 @@ let ``Process orders, take position`` () =
         { GetQuotes         = getQuotes
           ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
-          CalculateStopLoss = calculateStopLoss }
+          CalculateExitStop = calculateExitStop }
 
     let summaryLog =
         { Date      = DateTime.MinValue
@@ -319,7 +319,7 @@ let ``Process orders, take position`` () =
     recordsLog.DeltaHi   |> should equal (1.00m / 101.00m)
     recordsLog.DeltaLo   |> should equal (1.00m / 100.00m)
     recordsLog.Shares    |> should equal 100u
-    recordsLog.StopLoss  |> should equal (Some 100.01m)
+    recordsLog.ExitStop  |> should equal (Some 100.01m)
 
     summaryLog.Date      |> should equal date2
     summaryLog.Cash      |> should equal  989800.00m
@@ -332,7 +332,7 @@ let ``Process orders, take position`` () =
     let nextExitOrder = nextExitOrders.[0]
     nextExitOrder.Ticker |> should equal "X"
     nextExitOrder.Shares |> should equal 100u
-    nextExitOrder.StopLoss |> should equal 100.02m
+    nextExitOrder.Stop   |> should equal 100.02m
 
 //-------------------------------------------------------------------------------------------------
 
@@ -356,7 +356,7 @@ let ``Process orders, take position and exit position on the same day`` () =
         | date when date = date1 -> [| { Ticker = "X"; Shares = 100u } |]
         | _ -> Array.empty
 
-    let calculateStopLoss elementLog =
+    let calculateExitStop elementLog =
         match (elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date) with
         | "X", date when date = date1 -> 101.01m
         | _ -> unexpectedCall ()
@@ -365,7 +365,7 @@ let ``Process orders, take position and exit position on the same day`` () =
         { GetQuotes         = getQuotes
           ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
-          CalculateStopLoss = calculateStopLoss }
+          CalculateExitStop = calculateExitStop }
 
     let summaryLog =
         { Date      = DateTime.MinValue
@@ -414,7 +414,7 @@ let ``Process orders, take position and exit position on the same day`` () =
     recordsLog.DeltaHi   |> should equal (1.00m / 101.00m)
     recordsLog.DeltaLo   |> should equal (1.00m / 100.00m)
     recordsLog.Shares    |> should equal 0u
-    recordsLog.StopLoss  |> should equal (Some 101.01m)
+    recordsLog.ExitStop  |> should equal (Some 101.01m)
 
     summaryLog.Date      |> should equal date2
     summaryLog.Cash      |> should equal  999901.00m
@@ -445,7 +445,7 @@ let ``Process orders, take position order ignored for discontinued instrument`` 
         | date when date = date1 -> [| { Ticker = "X"; Shares = 100u } |]
         | _ -> Array.empty
 
-    let calculateStopLoss elementLog =
+    let calculateExitStop elementLog =
         match (elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date) with
         | "X", date when date = date1 -> 100.01m
         | _ -> unexpectedCall ()
@@ -454,7 +454,7 @@ let ``Process orders, take position order ignored for discontinued instrument`` 
         { GetQuotes         = getQuotes
           ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
-          CalculateStopLoss = calculateStopLoss }
+          CalculateExitStop = calculateExitStop }
 
     let summaryLog =
         { Date      = DateTime.MinValue
@@ -502,7 +502,7 @@ let ``Process orders, take position, exit position`` () =
         | date when date = date1 -> [| { Ticker = "X"; Shares = 100u } |]
         | _ -> Array.empty
 
-    let calculateStopLoss elementLog =
+    let calculateExitStop elementLog =
         match (elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date) with
         | "X", date when date = date1 -> 100.01m
         | "X", date when date = date2 -> 102.02m
@@ -512,7 +512,7 @@ let ``Process orders, take position, exit position`` () =
         { GetQuotes         = getQuotes
           ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
-          CalculateStopLoss = calculateStopLoss }
+          CalculateExitStop = calculateExitStop }
 
     let summaryLog =
         { Date      = DateTime.MinValue
@@ -556,7 +556,7 @@ let ``Process orders, take position, exit position`` () =
     recordsLog.DeltaHi   |> should equal (1.00m / 102.00m)
     recordsLog.DeltaLo   |> should equal (1.00m / 101.00m)
     recordsLog.Shares    |> should equal 0u
-    recordsLog.StopLoss  |> should equal (Some 102.02m)
+    recordsLog.ExitStop  |> should equal (Some 102.02m)
 
     summaryLog.Date      |> should equal date3
     summaryLog.Cash      |> should equal 1000002.00m
@@ -590,7 +590,7 @@ let ``Process orders, take position, hold position`` () =
         | date when date = date1 -> [| { Ticker = "X"; Shares = 100u } |]
         | _ -> Array.empty
 
-    let calculateStopLoss elementLog =
+    let calculateExitStop elementLog =
         match (elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date) with
         | "X", date when date = date1 -> 100.01m
         | "X", date when date = date2 -> 100.02m
@@ -601,7 +601,7 @@ let ``Process orders, take position, hold position`` () =
         { GetQuotes         = getQuotes
           ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
-          CalculateStopLoss = calculateStopLoss }
+          CalculateExitStop = calculateExitStop }
 
     let summaryLog =
         { Date      = DateTime.MinValue
@@ -639,7 +639,7 @@ let ``Process orders, take position, hold position`` () =
     recordsLog.DeltaHi   |> should equal (1.00m / 102.00m)
     recordsLog.DeltaLo   |> should equal (1.00m / 101.00m)
     recordsLog.Shares    |> should equal 100u
-    recordsLog.StopLoss  |> should equal (Some 100.02m)
+    recordsLog.ExitStop  |> should equal (Some 100.02m)
 
     summaryLog.Date      |> should equal date3
     summaryLog.Cash      |> should equal  989800.00m
@@ -652,7 +652,7 @@ let ``Process orders, take position, hold position`` () =
     let nextExitOrder = nextExitOrders.[0]
     nextExitOrder.Ticker |> should equal "X"
     nextExitOrder.Shares |> should equal 100u
-    nextExitOrder.StopLoss |> should equal 100.03m
+    nextExitOrder.Stop   |> should equal 100.03m
 
 //-------------------------------------------------------------------------------------------------
 
@@ -679,7 +679,7 @@ let ``Process orders, take position, stack onto existing position`` () =
         | date when date = date2 -> [| { Ticker = "X"; Shares = 150u } |]
         | _ -> Array.empty
 
-    let calculateStopLoss elementLog =
+    let calculateExitStop elementLog =
         match (elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date) with
         | "X", date when date = date1 -> 100.01m
         | "X", date when date = date2 -> 100.02m
@@ -690,7 +690,7 @@ let ``Process orders, take position, stack onto existing position`` () =
         { GetQuotes         = getQuotes
           ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
-          CalculateStopLoss = calculateStopLoss }
+          CalculateExitStop = calculateExitStop }
 
     let summaryLog =
         { Date      = DateTime.MinValue
@@ -734,7 +734,7 @@ let ``Process orders, take position, stack onto existing position`` () =
     recordsLog.DeltaHi   |> should equal (1.00m / 102.00m)
     recordsLog.DeltaLo   |> should equal (1.00m / 101.00m)
     recordsLog.Shares    |> should equal 250u
-    recordsLog.StopLoss  |> should equal (Some 100.02m)
+    recordsLog.ExitStop  |> should equal (Some 100.02m)
 
     summaryLog.Date      |> should equal date3
     summaryLog.Cash      |> should equal  974350.00m
@@ -747,7 +747,7 @@ let ``Process orders, take position, stack onto existing position`` () =
     let nextExitOrder = nextExitOrders.[0]
     nextExitOrder.Ticker |> should equal "X"
     nextExitOrder.Shares |> should equal 250u
-    nextExitOrder.StopLoss |> should equal 100.03m
+    nextExitOrder.Stop   |> should equal 100.03m
 
 //-------------------------------------------------------------------------------------------------
 
@@ -772,7 +772,7 @@ let ``Process orders, take position, terminate position for discontinued instrum
         | date when date = date1 -> [| { Ticker = "X"; Shares = 100u } |]
         | _ -> Array.empty
 
-    let calculateStopLoss elementLog =
+    let calculateExitStop elementLog =
         match (elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date) with
         | "X", date when date = date1 -> 100.01m
         | "X", date when date = date2 -> 100.02m
@@ -782,7 +782,7 @@ let ``Process orders, take position, terminate position for discontinued instrum
         { GetQuotes         = getQuotes
           ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
-          CalculateStopLoss = calculateStopLoss }
+          CalculateExitStop = calculateExitStop }
 
     let summaryLog =
         { Date      = DateTime.MinValue

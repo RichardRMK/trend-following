@@ -21,15 +21,15 @@ let private computeShares prevShares (tradingLogs : TradingLog[]) =
     |> (+) (int prevShares)
     |> Checked.uint32
 
-let private computeStopLoss (exitOrder : ExitOrder option) =
-    exitOrder |> Option.map (fun x -> x.StopLoss)
+let private computeExitStop (exitOrder : ExitOrder option) =
+    exitOrder |> Option.map (fun x -> x.Stop)
 
 //-------------------------------------------------------------------------------------------------
 
 let private computeRecordsLogInit (quote : Quote) exitOrder tradingLogs =
 
     let shares = tradingLogs |> computeShares 0u
-    let stopLoss = exitOrder |> computeStopLoss
+    let exitStop = exitOrder |> computeExitStop
 
     { Date     = quote.Date
       Ticker   = quote.Ticker
@@ -43,7 +43,7 @@ let private computeRecordsLogInit (quote : Quote) exitOrder tradingLogs =
       DeltaHi  = 0m
       DeltaLo  = 0m
       Shares   = shares
-      StopLoss = stopLoss }
+      ExitStop = exitStop }
 
 let private computeRecordsLogNext (quote : Quote) exitOrder tradingLogs prevRecordsLog =
 
@@ -52,7 +52,7 @@ let private computeRecordsLogNext (quote : Quote) exitOrder tradingLogs prevReco
     let deltaLo = (quote.Lo / prevRecordsLog.Lo) - 1m
 
     let shares = tradingLogs |> computeShares prevRecordsLog.Shares
-    let stopLoss = exitOrder |> computeStopLoss
+    let exitStop = exitOrder |> computeExitStop
 
     { Date     = quote.Date
       Ticker   = quote.Ticker
@@ -66,7 +66,7 @@ let private computeRecordsLogNext (quote : Quote) exitOrder tradingLogs prevReco
       DeltaHi  = deltaHi
       DeltaLo  = deltaLo
       Shares   = shares
-      StopLoss = stopLoss }
+      ExitStop = exitStop }
 
 let computeRecordsLog (quote : Quote) exitOrder tradingLogs = function
     | None      -> computeRecordsLogInit quote exitOrder tradingLogs
@@ -126,7 +126,7 @@ let computeSummaryLog date (tradingLogs : TradingLog[]) elementLogs prevSummaryL
         elementLogs
         |> Seq.filter position
         |> Seq.map (fun x -> x.RecordsLog)
-        |> Seq.map (fun x -> decimal x.Shares * x.StopLoss.Value)
+        |> Seq.map (fun x -> decimal x.Shares * x.ExitStop.Value)
         |> Seq.sum
 
     let cash = prevSummaryLog.Cash + cashValueAdjustment
@@ -170,11 +170,11 @@ let processExitOrders (orders : Order[]) (quotes : Quote[]) =
         { Date   = quote.Date
           Ticker = order.Ticker
           Shares = order.Shares |> forExitPosition
-          Price  = order.StopLoss }
+          Price  = order.Stop }
 
     let processOrder (order : ExitOrder) =
         quotes
-        |> Array.tryFind (fun quote -> quote.Ticker = order.Ticker && quote.Lo <= order.StopLoss)
+        |> Array.tryFind (fun quote -> quote.Ticker = order.Ticker && quote.Lo <= order.Stop)
         |> Option.map (executeOrder order)
 
     orders
@@ -219,7 +219,7 @@ let computeExitOrders model elementLogs (takeOrders : TakeOrder[]) =
     let generateOrder (elementLog, shares) =
         { Ticker = elementLog.RecordsLog.Ticker
           Shares = shares
-          StopLoss = model.CalculateStopLoss elementLog }
+          Stop   = model.CalculateExitStop elementLog }
 
     elementLogs
     |> Array.map (fun elementLog -> elementLog, computeShares elementLog)
