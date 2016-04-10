@@ -7,11 +7,11 @@ open TrendFollowing.Types
 
 let inline private negate value = LanguagePrimitives.GenericZero - value
 
-let private chooseTakeOrder = function Take order -> Some order | _ -> None
-let private chooseExitOrder = function Exit order -> Some order | _ -> None
-
 let private forTakePosition = int
 let private forExitPosition = int >> negate
+
+let chooseTakeOrder = function Take order -> Some order | _ -> None
+let chooseExitOrder = function Exit order -> Some order | _ -> None
 
 //-------------------------------------------------------------------------------------------------
 

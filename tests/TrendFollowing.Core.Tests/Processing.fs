@@ -8,9 +8,6 @@ open TrendFollowing.Processing
 
 //-------------------------------------------------------------------------------------------------
 
-let private chooseTakeOrder = function Take order -> Some order | _ -> None
-let private chooseExitOrder = function Exit order -> Some order | _ -> None
-
 let private unexpectedCall () = failwith "Unexpected call."
 
 let private toQuote ticker (date, hi, lo, close, dividend, splitNew, splitOld) : Quote =
