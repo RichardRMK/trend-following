@@ -7,7 +7,7 @@ open TrendFollowing.Data
 //-------------------------------------------------------------------------------------------------
 
 let paramTicker = "BRK.A"
-let paramPrincipal = 100000m
+let paramPrincipal = 1000000.00m
 let paramRisk = 0.10m
 let paramWait = 200
 let paramRes = 200

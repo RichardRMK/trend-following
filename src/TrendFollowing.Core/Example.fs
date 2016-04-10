@@ -120,7 +120,7 @@ let model =
       CalculateExitStop = calculateExitStop }
 
 let simulation =
-    { Principal         = 100000m
+    { Principal         = 1000000.00m
       Dates             = dates
       Model             = model
       ReportElementLog  = reportElementLog
