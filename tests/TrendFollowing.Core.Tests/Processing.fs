@@ -163,8 +163,8 @@ let ``Compute delta, price move`` () =
     let date2 = DateTime(2000, 01, 02)
 
     let quotes =
-        [| date1, 102.00m, 101.00m, 101.50m, None, None, None
-           date2, 107.10m, 103.02m, 105.06m, None, None, None |]
+        [| date1, 107.00m, 105.00m, 106.00m, None, None, None
+           date2, 108.00m, 106.00m, 107.00m, None, None, None |]
         |> Array.map (toQuote "X")
 
     let getQuotes date =
@@ -195,14 +195,66 @@ let ``Compute delta, price move`` () =
     recordsLog.Date      |> should equal date2
     recordsLog.Ticker    |> should equal "X"
     recordsLog.Count     |> should equal 2u
-    recordsLog.Hi        |> should equal 107.10m
-    recordsLog.Lo        |> should equal 103.02m
-    recordsLog.Close     |> should equal 105.06m
+    recordsLog.Hi        |> should equal 108.00m
+    recordsLog.Lo        |> should equal 106.00m
+    recordsLog.Close     |> should equal 107.00m
     recordsLog.Dividend  |> should equal 0m
     recordsLog.SplitNew  |> should equal 1u
     recordsLog.SplitOld  |> should equal 1u
-    recordsLog.DeltaHi   |> should equal 0.05m
-    recordsLog.DeltaLo   |> should equal 0.02m
+    recordsLog.DeltaHi   |> should equal ((108.00m / 107.00m) - 1m)
+    recordsLog.DeltaLo   |> should equal ((106.00m / 105.00m) - 1m)
+    recordsLog.Shares    |> should equal 0u
+    recordsLog.ExitStop  |> should equal None
+
+//-------------------------------------------------------------------------------------------------
+
+[<Test>]
+let ``Compute delta, price move, dividend 10%`` () =
+
+    let date1 = DateTime(2000, 01, 01)
+    let date2 = DateTime(2000, 01, 02)
+
+    let quotes =
+        [| date1, 107.00m, 105.00m, 106.00m, None       , None, None
+           date2,  97.20m,  95.40m,  96.30m, Some 10.60m, None, None |]
+        |> Array.map (toQuote "X")
+
+    let getQuotes date =
+        quotes
+        |> Array.filter (fun x -> x.Date = date)
+
+    let model =
+        { GetQuotes         = getQuotes
+          ComputeMetricsLog = (fun _ _ -> ())
+          ComputeTakeOrders = (fun _ _ -> Array.empty)
+          CalculateExitStop = (fun _ -> unexpectedCall ()) }
+
+    let summaryLog =
+        { Date      = DateTime.MinValue
+          Cash      = 1000000.00m
+          Equity    = 1000000.00m
+          ExitValue = 1000000.00m
+          Peak      = 1000000.00m
+          Drawdown  = 0m
+          Leverage  = 0m }
+
+    let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
+    let state1 = date1 |> runIncrement model state0
+    let state2 = date2 |> runIncrement model state1
+    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+
+    let recordsLog = elementLogs.[0].RecordsLog
+    recordsLog.Date      |> should equal date2
+    recordsLog.Ticker    |> should equal "X"
+    recordsLog.Count     |> should equal 2u
+    recordsLog.Hi        |> should equal 97.20m
+    recordsLog.Lo        |> should equal 95.40m
+    recordsLog.Close     |> should equal 96.30m
+    recordsLog.Dividend  |> should equal 10.60m
+    recordsLog.SplitNew  |> should equal 1u
+    recordsLog.SplitOld  |> should equal 1u
+    recordsLog.DeltaHi   |> should equal ((97.20m / (107.00m * (1m - (10.60m / 106.00m)))) - 1m)
+    recordsLog.DeltaLo   |> should equal ((95.40m / (105.00m * (1m - (10.60m / 106.00m)))) - 1m)
     recordsLog.Shares    |> should equal 0u
     recordsLog.ExitStop  |> should equal None
 
@@ -211,35 +263,260 @@ let ``Compute delta, price move`` () =
 [<Test>]
 let ``Compute delta, price move, dividend 50%`` () =
 
-    Assert.Fail()
+    let date1 = DateTime(2000, 01, 01)
+    let date2 = DateTime(2000, 01, 02)
 
-//-------------------------------------------------------------------------------------------------
+    let quotes =
+        [| date1, 107.00m, 105.00m, 106.00m, None       , None, None
+           date2,  54.00m,  53.00m,  53.50m, Some 53.00m, None, None |]
+        |> Array.map (toQuote "X")
 
-[<Test>]
-let ``Compute delta, price move, dividend 10%`` () =
+    let getQuotes date =
+        quotes
+        |> Array.filter (fun x -> x.Date = date)
 
-    Assert.Fail()
+    let model =
+        { GetQuotes         = getQuotes
+          ComputeMetricsLog = (fun _ _ -> ())
+          ComputeTakeOrders = (fun _ _ -> Array.empty)
+          CalculateExitStop = (fun _ -> unexpectedCall ()) }
+
+    let summaryLog =
+        { Date      = DateTime.MinValue
+          Cash      = 1000000.00m
+          Equity    = 1000000.00m
+          ExitValue = 1000000.00m
+          Peak      = 1000000.00m
+          Drawdown  = 0m
+          Leverage  = 0m }
+
+    let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
+    let state1 = date1 |> runIncrement model state0
+    let state2 = date2 |> runIncrement model state1
+    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+
+    let recordsLog = elementLogs.[0].RecordsLog
+    recordsLog.Date      |> should equal date2
+    recordsLog.Ticker    |> should equal "X"
+    recordsLog.Count     |> should equal 2u
+    recordsLog.Hi        |> should equal 54.00m
+    recordsLog.Lo        |> should equal 53.00m
+    recordsLog.Close     |> should equal 53.50m
+    recordsLog.Dividend  |> should equal 53.00m
+    recordsLog.SplitNew  |> should equal 1u
+    recordsLog.SplitOld  |> should equal 1u
+    recordsLog.DeltaHi   |> should equal ((54.00m / (107.00m * (1m - (53.00m / 106.00m)))) - 1m)
+    recordsLog.DeltaLo   |> should equal ((53.00m / (105.00m * (1m - (53.00m / 106.00m)))) - 1m)
+    recordsLog.Shares    |> should equal 0u
+    recordsLog.ExitStop  |> should equal None
 
 //-------------------------------------------------------------------------------------------------
 
 [<Test>]
 let ``Compute delta, price move, split 2:1`` () =
 
-    Assert.Fail()
+    let date1 = DateTime(2000, 01, 01)
+    let date2 = DateTime(2000, 01, 02)
+
+    let quotes =
+        [| date1, 107.00m, 105.00m, 106.00m, None, None   , None
+           date2,  54.00m,  53.00m,  53.50m, None, Some 2u, Some 1u |]
+        |> Array.map (toQuote "X")
+
+    let getQuotes date =
+        quotes
+        |> Array.filter (fun x -> x.Date = date)
+
+    let model =
+        { GetQuotes         = getQuotes
+          ComputeMetricsLog = (fun _ _ -> ())
+          ComputeTakeOrders = (fun _ _ -> Array.empty)
+          CalculateExitStop = (fun _ -> unexpectedCall ()) }
+
+    let summaryLog =
+        { Date      = DateTime.MinValue
+          Cash      = 1000000.00m
+          Equity    = 1000000.00m
+          ExitValue = 1000000.00m
+          Peak      = 1000000.00m
+          Drawdown  = 0m
+          Leverage  = 0m }
+
+    let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
+    let state1 = date1 |> runIncrement model state0
+    let state2 = date2 |> runIncrement model state1
+    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+
+    let recordsLog = elementLogs.[0].RecordsLog
+    recordsLog.Date      |> should equal date2
+    recordsLog.Ticker    |> should equal "X"
+    recordsLog.Count     |> should equal 2u
+    recordsLog.Hi        |> should equal 54.00m
+    recordsLog.Lo        |> should equal 53.00m
+    recordsLog.Close     |> should equal 53.50m
+    recordsLog.Dividend  |> should equal 0m
+    recordsLog.SplitNew  |> should equal 2u
+    recordsLog.SplitOld  |> should equal 1u
+    recordsLog.DeltaHi   |> should equal ((54.00m / (107.00m * (1m / 2m))) - 1m)
+    recordsLog.DeltaLo   |> should equal ((53.00m / (105.00m * (1m / 2m))) - 1m)
+    recordsLog.Shares    |> should equal 0u
+    recordsLog.ExitStop  |> should equal None
 
 //-------------------------------------------------------------------------------------------------
 
 [<Test>]
 let ``Compute delta, price move, split 3:1`` () =
 
-    Assert.Fail()
+    let date1 = DateTime(2000, 01, 01)
+    let date2 = DateTime(2000, 01, 02)
+
+    let quotes =
+        [| date1, 107.00m, 105.00m, 106.00m, None, None   , None
+           date2,  36.00m,  35.33m,  35.67m, None, Some 3u, Some 1u |]
+        |> Array.map (toQuote "X")
+
+    let getQuotes date =
+        quotes
+        |> Array.filter (fun x -> x.Date = date)
+
+    let model =
+        { GetQuotes         = getQuotes
+          ComputeMetricsLog = (fun _ _ -> ())
+          ComputeTakeOrders = (fun _ _ -> Array.empty)
+          CalculateExitStop = (fun _ -> unexpectedCall ()) }
+
+    let summaryLog =
+        { Date      = DateTime.MinValue
+          Cash      = 1000000.00m
+          Equity    = 1000000.00m
+          ExitValue = 1000000.00m
+          Peak      = 1000000.00m
+          Drawdown  = 0m
+          Leverage  = 0m }
+
+    let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
+    let state1 = date1 |> runIncrement model state0
+    let state2 = date2 |> runIncrement model state1
+    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+
+    let recordsLog = elementLogs.[0].RecordsLog
+    recordsLog.Date      |> should equal date2
+    recordsLog.Ticker    |> should equal "X"
+    recordsLog.Count     |> should equal 2u
+    recordsLog.Hi        |> should equal 36.00m
+    recordsLog.Lo        |> should equal 35.33m
+    recordsLog.Close     |> should equal 35.67m
+    recordsLog.Dividend  |> should equal 0m
+    recordsLog.SplitNew  |> should equal 3u
+    recordsLog.SplitOld  |> should equal 1u
+    recordsLog.DeltaHi   |> should equal ((36.00m / (107.00m * (1m / 3m))) - 1m)
+    recordsLog.DeltaLo   |> should equal ((35.33m / (105.00m * (1m / 3m))) - 1m)
+    recordsLog.Shares    |> should equal 0u
+    recordsLog.ExitStop  |> should equal None
+
+//-------------------------------------------------------------------------------------------------
+
+[<Test>]
+let ``Compute delta, price move, split 4:3`` () =
+
+    let date1 = DateTime(2000, 01, 01)
+    let date2 = DateTime(2000, 01, 02)
+
+    let quotes =
+        [| date1, 107.00m, 105.00m, 106.00m, None, None   , None
+           date2,  81.00m,  79.50m,  80.25m, None, Some 4u, Some 3u |]
+        |> Array.map (toQuote "X")
+
+    let getQuotes date =
+        quotes
+        |> Array.filter (fun x -> x.Date = date)
+
+    let model =
+        { GetQuotes         = getQuotes
+          ComputeMetricsLog = (fun _ _ -> ())
+          ComputeTakeOrders = (fun _ _ -> Array.empty)
+          CalculateExitStop = (fun _ -> unexpectedCall ()) }
+
+    let summaryLog =
+        { Date      = DateTime.MinValue
+          Cash      = 1000000.00m
+          Equity    = 1000000.00m
+          ExitValue = 1000000.00m
+          Peak      = 1000000.00m
+          Drawdown  = 0m
+          Leverage  = 0m }
+
+    let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
+    let state1 = date1 |> runIncrement model state0
+    let state2 = date2 |> runIncrement model state1
+    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+
+    let recordsLog = elementLogs.[0].RecordsLog
+    recordsLog.Date      |> should equal date2
+    recordsLog.Ticker    |> should equal "X"
+    recordsLog.Count     |> should equal 2u
+    recordsLog.Hi        |> should equal 81.00m
+    recordsLog.Lo        |> should equal 79.50m
+    recordsLog.Close     |> should equal 80.25m
+    recordsLog.Dividend  |> should equal 0m
+    recordsLog.SplitNew  |> should equal 4u
+    recordsLog.SplitOld  |> should equal 3u
+    recordsLog.DeltaHi   |> should equal ((81.00m / (107.00m * (3m / 4m))) - 1m)
+    recordsLog.DeltaLo   |> should equal ((79.50m / (105.00m * (3m / 4m))) - 1m)
+    recordsLog.Shares    |> should equal 0u
+    recordsLog.ExitStop  |> should equal None
 
 //-------------------------------------------------------------------------------------------------
 
 [<Test>]
 let ``Compute delta, price move, both dividend 10% and split 2:1`` () =
 
-    Assert.Fail()
+    let date1 = DateTime(2000, 01, 01)
+    let date2 = DateTime(2000, 01, 02)
+
+    let quotes =
+        [| date1, 107.00m, 105.00m, 106.00m, None       , None   , None
+           date2,  48.60m,  47.70m,  48.15m, Some 10.60m, Some 2u, Some 1u |]
+        |> Array.map (toQuote "X")
+
+    let getQuotes date =
+        quotes
+        |> Array.filter (fun x -> x.Date = date)
+
+    let model =
+        { GetQuotes         = getQuotes
+          ComputeMetricsLog = (fun _ _ -> ())
+          ComputeTakeOrders = (fun _ _ -> Array.empty)
+          CalculateExitStop = (fun _ -> unexpectedCall ()) }
+
+    let summaryLog =
+        { Date      = DateTime.MinValue
+          Cash      = 1000000.00m
+          Equity    = 1000000.00m
+          ExitValue = 1000000.00m
+          Peak      = 1000000.00m
+          Drawdown  = 0m
+          Leverage  = 0m }
+
+    let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
+    let state1 = date1 |> runIncrement model state0
+    let state2 = date2 |> runIncrement model state1
+    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+
+    let recordsLog = elementLogs.[0].RecordsLog
+    recordsLog.Date      |> should equal date2
+    recordsLog.Ticker    |> should equal "X"
+    recordsLog.Count     |> should equal 2u
+    recordsLog.Hi        |> should equal 48.60m
+    recordsLog.Lo        |> should equal 47.70m
+    recordsLog.Close     |> should equal 48.15m
+    recordsLog.Dividend  |> should equal 10.60m
+    recordsLog.SplitNew  |> should equal 2u
+    recordsLog.SplitOld  |> should equal 1u
+    recordsLog.DeltaHi   |> should equal ((48.60m / (107.00m * (1m - (10.60m / 106.00m)) * (1m / 2m))) - 1m)
+    recordsLog.DeltaLo   |> should equal ((47.70m / (105.00m * (1m - (10.60m / 106.00m)) * (1m / 2m))) - 1m)
+    recordsLog.Shares    |> should equal 0u
+    recordsLog.ExitStop  |> should equal None
 
 //-------------------------------------------------------------------------------------------------
 

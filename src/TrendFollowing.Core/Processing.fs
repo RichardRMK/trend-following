@@ -15,6 +15,17 @@ let chooseExitOrder = function Exit order -> Some order | _ -> None
 
 //-------------------------------------------------------------------------------------------------
 
+let private computeOptional placeholder = function
+    | None -> placeholder
+    | Some value -> value
+
+let private computeDelta dividend splitNew splitOld basis next prev =
+    prev
+    |> (*) (1m - (dividend / basis))
+    |> (*) (decimal splitOld / decimal splitNew)
+    |> (/) next
+    |> (+) -1m
+
 let private computeShares prevShares (tradingLogs : TradingLog[]) =
     tradingLogs
     |> Seq.sumBy (fun x -> x.Shares)
@@ -28,6 +39,10 @@ let private computeExitStop (exitOrder : ExitOrder option) =
 
 let private computeRecordsLogInit (quote : Quote) exitOrder tradingLogs =
 
+    let dividend = computeOptional 0m quote.Dividend
+    let splitNew = computeOptional 1u quote.SplitNew
+    let splitOld = computeOptional 1u quote.SplitOld
+
     let shares = tradingLogs |> computeShares 0u
     let exitStop = exitOrder |> computeExitStop
 
@@ -37,9 +52,9 @@ let private computeRecordsLogInit (quote : Quote) exitOrder tradingLogs =
       Hi       = quote.Hi
       Lo       = quote.Lo
       Close    = quote.Close
-      Dividend = 0m
-      SplitNew = 1u
-      SplitOld = 1u
+      Dividend = dividend
+      SplitNew = splitNew
+      SplitOld = splitOld
       DeltaHi  = 0m
       DeltaLo  = 0m
       Shares   = shares
@@ -48,8 +63,14 @@ let private computeRecordsLogInit (quote : Quote) exitOrder tradingLogs =
 let private computeRecordsLogNext (quote : Quote) exitOrder tradingLogs prevRecordsLog =
 
     let count = prevRecordsLog.Count + 1u
-    let deltaHi = (quote.Hi / prevRecordsLog.Hi) - 1m
-    let deltaLo = (quote.Lo / prevRecordsLog.Lo) - 1m
+
+    let dividend = computeOptional 0m quote.Dividend
+    let splitNew = computeOptional 1u quote.SplitNew
+    let splitOld = computeOptional 1u quote.SplitOld
+
+    let computeDelta = prevRecordsLog.Close |> computeDelta dividend splitNew splitOld
+    let deltaHi = computeDelta quote.Hi prevRecordsLog.Hi
+    let deltaLo = computeDelta quote.Lo prevRecordsLog.Lo
 
     let shares = tradingLogs |> computeShares prevRecordsLog.Shares
     let exitStop = exitOrder |> computeExitStop
@@ -60,9 +81,9 @@ let private computeRecordsLogNext (quote : Quote) exitOrder tradingLogs prevReco
       Hi       = quote.Hi
       Lo       = quote.Lo
       Close    = quote.Close
-      Dividend = 0m
-      SplitNew = 1u
-      SplitOld = 1u
+      Dividend = dividend
+      SplitNew = splitNew
+      SplitOld = splitOld
       DeltaHi  = deltaHi
       DeltaLo  = deltaLo
       Shares   = shares
