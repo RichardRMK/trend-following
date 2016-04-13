@@ -490,7 +490,7 @@ let ``Compute delta, price move, both dividend 10% and split 2:1`` () =
 //-------------------------------------------------------------------------------------------------
 
 [<Test>]
-let ``Process orders, take position`` () =
+let ``Process transactions, take position`` () =
 
     let date1 = DateTime(2000, 01, 01)
     let date2 = DateTime(2000, 01, 02)
@@ -588,7 +588,7 @@ let ``Process orders, take position`` () =
 //-------------------------------------------------------------------------------------------------
 
 [<Test>]
-let ``Process orders, take position and exit position on the same day`` () =
+let ``Process transactions, take position and exit position on the same day`` () =
 
     let date1 = DateTime(2000, 01, 01)
     let date2 = DateTime(2000, 01, 02)
@@ -689,7 +689,7 @@ let ``Process orders, take position and exit position on the same day`` () =
 //-------------------------------------------------------------------------------------------------
 
 [<Test>]
-let ``Process orders, take position order ignored for discontinued instrument`` () =
+let ``Process transactions, take position order ignored for discontinued instrument`` () =
 
     let date1 = DateTime(2000, 01, 01)
     let date2 = DateTime(2000, 01, 02)
@@ -748,7 +748,7 @@ let ``Process orders, take position order ignored for discontinued instrument`` 
 //-------------------------------------------------------------------------------------------------
 
 [<Test>]
-let ``Process orders, take position, exit position`` () =
+let ``Process transactions, take position, exit position`` () =
 
     let date1 = DateTime(2000, 01, 01)
     let date2 = DateTime(2000, 01, 02)
@@ -844,7 +844,7 @@ let ``Process orders, take position, exit position`` () =
 //-------------------------------------------------------------------------------------------------
 
 [<Test>]
-let ``Process orders, take position, hold position`` () =
+let ``Process transactions, take position, hold position`` () =
 
     let date1 = DateTime(2000, 01, 01)
     let date2 = DateTime(2000, 01, 02)
@@ -937,7 +937,7 @@ let ``Process orders, take position, hold position`` () =
 //-------------------------------------------------------------------------------------------------
 
 [<Test>]
-let ``Process orders, take position, stack onto existing position`` () =
+let ``Process transactions, take position, stack onto existing position`` () =
 
     let date1 = DateTime(2000, 01, 01)
     let date2 = DateTime(2000, 01, 02)
@@ -1040,7 +1040,7 @@ let ``Process orders, take position, stack onto existing position`` () =
 //-------------------------------------------------------------------------------------------------
 
 [<Test>]
-let ``Process orders, take position, terminate position for discontinued instrument`` () =
+let ``Process transactions, take position, terminate position for discontinued instrument`` () =
 
     let date1 = DateTime(2000, 01, 01)
     let date2 = DateTime(2000, 01, 02)
