@@ -42,11 +42,33 @@ type SummaryLog =
       Drawdown   : decimal
       Leverage   : decimal }
 
+//-------------------------------------------------------------------------------------------------
+
+type JournalTakePosition =
+    { Shares     : uint32
+      Price      : decimal }
+
+type JournalExitPosition =
+    { Shares     : uint32
+      Price      : decimal }
+
+type JournalTermPosition =
+    { Shares     : uint32
+      Price      : decimal }
+
+type JournalDetail =
+    | TakePosition of JournalTakePosition
+    | ExitPosition of JournalExitPosition
+    | TermPosition of JournalTermPosition
+
 type TradingLog =
     { Date       : DateTime
       Ticker     : string
       Shares     : int
-      Price      : decimal }
+      Amount     : decimal
+      Detail     : JournalDetail }
+
+//-------------------------------------------------------------------------------------------------
 
 type TakeOrder =
     { Ticker     : string

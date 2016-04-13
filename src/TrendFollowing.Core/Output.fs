@@ -2,6 +2,7 @@
 
 open System
 open System.IO
+open System.Text.RegularExpressions
 open TrendFollowing.Types
 
 //-------------------------------------------------------------------------------------------------
@@ -21,11 +22,15 @@ let private extension = ".csv"
 let private commaDelimited x y =
     x + "," + y
 
+let private replace pattern replacement input =
+    Regex.Replace(input, pattern, (replacement : string))
+
 let rec private format (value : obj) =
     match value with
     | :? DateTime as value -> value.ToString("yyyy-MM-dd")
     | :? Option<obj> -> ""
     | :? Option<decimal> as value -> value |> Option.get |> format
+    | :? JournalDetail -> value |> sprintf "%A" |> replace "\s+" " "
     | value -> value.ToString()
 
 let private getFields log =

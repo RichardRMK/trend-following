@@ -7,9 +7,6 @@ open TrendFollowing.Types
 
 let inline private negate value = LanguagePrimitives.GenericZero - value
 
-let private forTakePosition = int
-let private forExitPosition = int >> negate
-
 let chooseTakeOrder = function Take order -> Some order | _ -> None
 let chooseExitOrder = function Exit order -> Some order | _ -> None
 
@@ -129,9 +126,8 @@ let computeSummaryLog date (tradingLogs : TradingLog[]) elementLogs prevSummaryL
 
     let cashValueAdjustment =
         tradingLogs
-        |> Seq.map (fun x -> decimal x.Shares * x.Price)
+        |> Seq.map (fun x -> x.Amount)
         |> Seq.sum
-        |> negate
 
     let position elementLog =
         elementLog.RecordsLog.Shares <> 0u
@@ -167,65 +163,6 @@ let computeSummaryLog date (tradingLogs : TradingLog[]) elementLogs prevSummaryL
 
 //-------------------------------------------------------------------------------------------------
 
-let processTakeOrders (orders : Order[]) (quotes : Quote[]) =
-
-    let executeOrder (order : TakeOrder) (quote : Quote) =
-        { Date   = quote.Date
-          Ticker = order.Ticker
-          Shares = order.Shares |> forTakePosition
-          Price  = quote.Hi }
-
-    let processOrder (order : TakeOrder) =
-        quotes
-        |> Array.tryFind (fun quote -> quote.Ticker = order.Ticker)
-        |> Option.map (executeOrder order)
-
-    orders
-    |> Array.choose chooseTakeOrder
-    |> Array.map processOrder
-    |> Array.choose id
-
-let processExitOrders (orders : Order[]) (quotes : Quote[]) =
-
-    let executeOrder (order : ExitOrder) (quote : Quote) =
-        { Date   = quote.Date
-          Ticker = order.Ticker
-          Shares = order.Shares |> forExitPosition
-          Price  = order.Stop }
-
-    let processOrder (order : ExitOrder) =
-        quotes
-        |> Array.tryFind (fun quote -> quote.Ticker = order.Ticker && quote.Lo <= order.Stop)
-        |> Option.map (executeOrder order)
-
-    orders
-    |> Array.choose chooseExitOrder
-    |> Array.map processOrder
-    |> Array.choose id
-
-let processTermTrades date prevElementLogs (quotes : Quote[]) =
-
-    let isTerminated prevElementLog =
-        quotes
-        |> Array.exists (fun quote -> quote.Ticker = prevElementLog.RecordsLog.Ticker)
-        |> not
-
-    let openPosition prevElementLog =
-        prevElementLog.RecordsLog.Shares <> 0u
-
-    let executeTrade prevElementLog =
-        { Date   = date
-          Ticker = prevElementLog.RecordsLog.Ticker
-          Shares = prevElementLog.RecordsLog.Shares |> forExitPosition
-          Price  = prevElementLog.RecordsLog.Close }
-
-    prevElementLogs
-    |> Array.filter isTerminated
-    |> Array.filter openPosition
-    |> Array.map executeTrade
-
-//-------------------------------------------------------------------------------------------------
-
 let computeTakeOrders model elementLogs summaryLog =
     model.ComputeTakeOrders elementLogs summaryLog
 
@@ -249,15 +186,92 @@ let computeExitOrders model elementLogs (takeOrders : TakeOrder[]) =
 
 //-------------------------------------------------------------------------------------------------
 
+let processTransactionsTakePosition (orders : Order[]) (quotes : Quote[]) =
+
+    let executeTransaction (order : TakeOrder) (quote : Quote) : TradingLog =
+
+        let detail : JournalTakePosition =
+            { Shares = order.Shares
+              Price  = quote.Hi }
+
+        { Date   = quote.Date
+          Ticker = order.Ticker
+          Shares = detail.Shares |> (int)
+          Amount = detail.Shares |> (decimal >> negate) |> (*) detail.Price
+          Detail = TakePosition detail }
+
+    let processTransaction (order : TakeOrder) =
+        quotes
+        |> Array.tryFind (fun quote -> quote.Ticker = order.Ticker)
+        |> Option.map (executeTransaction order)
+
+    orders
+    |> Array.choose chooseTakeOrder
+    |> Array.map processTransaction
+    |> Array.choose id
+
+let processTransactionsExitPosition (orders : Order[]) (quotes : Quote[]) =
+
+    let executeTransaction (order : ExitOrder) (quote : Quote) : TradingLog =
+
+        let detail : JournalExitPosition =
+            { Shares = order.Shares
+              Price  = order.Stop }
+
+        { Date   = quote.Date
+          Ticker = order.Ticker
+          Shares = detail.Shares |> (int >> negate)
+          Amount = detail.Shares |> (decimal) |> (*) detail.Price
+          Detail = ExitPosition detail }
+
+    let processTransaction (order : ExitOrder) =
+        quotes
+        |> Array.tryFind (fun quote -> quote.Ticker = order.Ticker && quote.Lo <= order.Stop)
+        |> Option.map (executeTransaction order)
+
+    orders
+    |> Array.choose chooseExitOrder
+    |> Array.map processTransaction
+    |> Array.choose id
+
+let processTransactionsTermPosition date prevElementLogs (quotes : Quote[]) =
+
+    let hasBeenTerminated prevElementLog =
+        quotes
+        |> Array.exists (fun quote -> quote.Ticker = prevElementLog.RecordsLog.Ticker)
+        |> not
+
+    let hasAnOpenPosition prevElementLog =
+        prevElementLog.RecordsLog.Shares <> 0u
+
+    let executeTransaction prevElementLog : TradingLog =
+
+        let detail : JournalTermPosition =
+            { Shares = prevElementLog.RecordsLog.Shares
+              Price  = prevElementLog.RecordsLog.Close }
+
+        { Date   = date
+          Ticker = prevElementLog.RecordsLog.Ticker
+          Shares = detail.Shares |> (int >> negate)
+          Amount = detail.Shares |> (decimal) |> (*) detail.Price
+          Detail = TermPosition detail }
+
+    prevElementLogs
+    |> Array.filter hasBeenTerminated
+    |> Array.filter hasAnOpenPosition
+    |> Array.map executeTransaction
+
+//-------------------------------------------------------------------------------------------------
+
 let runIncrement model (_, prevElementLogs, prevSummaryLog, orders) date =
 
     let quotes = model.GetQuotes date
 
-    let tradingLogsTake = quotes |> processTakeOrders orders
-    let tradingLogsExit = quotes |> processExitOrders orders
-    let tradingLogsTerm = quotes |> processTermTrades date prevElementLogs
+    let tradingLogsTakePosition = quotes |> processTransactionsTakePosition orders
+    let tradingLogsExitPosition = quotes |> processTransactionsExitPosition orders
+    let tradingLogsTermPosition = quotes |> processTransactionsTermPosition date prevElementLogs
     let tradingLogs =
-        Array.concat [ tradingLogsTake; tradingLogsExit; tradingLogsTerm ]
+        Array.concat [ tradingLogsTakePosition; tradingLogsExitPosition; tradingLogsTermPosition ]
 
     let elementLogs = quotes |> Array.map (computeElementLog model orders tradingLogs prevElementLogs)
     let summaryLog = computeSummaryLog date tradingLogs elementLogs prevSummaryLog
