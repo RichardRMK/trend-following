@@ -81,7 +81,7 @@ let reportSummaryLog (summaryLog : SummaryLog) =
     let filename = filename<SummaryLog>
     report logs filename
 
-let reportTradingLog (tradingLog : TradingLog) =
-    let logs : obj list = [ tradingLog ]
-    let filename = filename<TradingLog>
+let reportJournalLog (journalLog : JournalLog) =
+    let logs : obj list = [ journalLog ]
+    let filename = filename<JournalLog>
     report logs filename

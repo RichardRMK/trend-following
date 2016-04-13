@@ -14,12 +14,12 @@ let private unexpectedType () = failwith "Unexpected type."
 let private toTakePosition = function | TakePosition detail -> detail | _ -> unexpectedType ()
 let private toExitPosition = function | ExitPosition detail -> detail | _ -> unexpectedType ()
 let private toTermPosition = function | TermPosition detail -> detail | _ -> unexpectedType ()
-let private (-->) tradingLog f = f tradingLog.Detail
+let private (-->) journalLog f = f journalLog.Detail
 
 let private isTakePosition = function TakePosition _ -> true | _ -> false
 let private isExitPosition = function ExitPosition _ -> true | _ -> false
 let private isTermPosition = function TermPosition _ -> true | _ -> false
-let private ifDetail f tradingLog = f tradingLog.Detail
+let private ifDetail f journalLog = f journalLog.Detail
 
 let private toQuote ticker (date, hi, lo, close, dividend, splitNew, splitOld) : Quote =
 
@@ -64,17 +64,17 @@ let ``Baseline increment 1`` () =
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
     let state1 = date1 |> runIncrement model state0
-    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state1
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state1
 
-    let tradingLogsTakePosition = tradingLogs |> Array.filter (ifDetail isTakePosition)
-    let tradingLogsExitPosition = tradingLogs |> Array.filter (ifDetail isExitPosition)
-    let tradingLogsTermPosition = tradingLogs |> Array.filter (ifDetail isTermPosition)
+    let journalLogsTakePosition = journalLogs |> Array.filter (ifDetail isTakePosition)
+    let journalLogsExitPosition = journalLogs |> Array.filter (ifDetail isExitPosition)
+    let journalLogsTermPosition = journalLogs |> Array.filter (ifDetail isTermPosition)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
-    tradingLogsTakePosition |> Array.length |> should equal 0
-    tradingLogsExitPosition |> Array.length |> should equal 0
-    tradingLogsTermPosition |> Array.length |> should equal 0
+    journalLogsTakePosition |> Array.length |> should equal 0
+    journalLogsExitPosition |> Array.length |> should equal 0
+    journalLogsTermPosition |> Array.length |> should equal 0
     elementLogs             |> Array.length |> should equal 1
     nextTakeOrders          |> Array.length |> should equal 0
     nextExitOrders          |> Array.length |> should equal 0
@@ -137,17 +137,17 @@ let ``Baseline increment 2`` () =
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
     let state1 = date1 |> runIncrement model state0
     let state2 = date2 |> runIncrement model state1
-    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
-    let tradingLogsTakePosition = tradingLogs |> Array.filter (ifDetail isTakePosition)
-    let tradingLogsExitPosition = tradingLogs |> Array.filter (ifDetail isExitPosition)
-    let tradingLogsTermPosition = tradingLogs |> Array.filter (ifDetail isTermPosition)
+    let journalLogsTakePosition = journalLogs |> Array.filter (ifDetail isTakePosition)
+    let journalLogsExitPosition = journalLogs |> Array.filter (ifDetail isExitPosition)
+    let journalLogsTermPosition = journalLogs |> Array.filter (ifDetail isTermPosition)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
-    tradingLogsTakePosition |> Array.length |> should equal 0
-    tradingLogsExitPosition |> Array.length |> should equal 0
-    tradingLogsTermPosition |> Array.length |> should equal 0
+    journalLogsTakePosition |> Array.length |> should equal 0
+    journalLogsExitPosition |> Array.length |> should equal 0
+    journalLogsTermPosition |> Array.length |> should equal 0
     elementLogs             |> Array.length |> should equal 1
     nextTakeOrders          |> Array.length |> should equal 0
     nextExitOrders          |> Array.length |> should equal 0
@@ -210,7 +210,7 @@ let ``Compute delta, price move`` () =
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
     let state1 = date1 |> runIncrement model state0
     let state2 = date2 |> runIncrement model state1
-    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
     recordsLog.Date      |> should equal date2
@@ -262,7 +262,7 @@ let ``Compute delta, price move, dividend 10%`` () =
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
     let state1 = date1 |> runIncrement model state0
     let state2 = date2 |> runIncrement model state1
-    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
     recordsLog.Date      |> should equal date2
@@ -314,7 +314,7 @@ let ``Compute delta, price move, dividend 50%`` () =
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
     let state1 = date1 |> runIncrement model state0
     let state2 = date2 |> runIncrement model state1
-    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
     recordsLog.Date      |> should equal date2
@@ -366,7 +366,7 @@ let ``Compute delta, price move, split 2:1`` () =
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
     let state1 = date1 |> runIncrement model state0
     let state2 = date2 |> runIncrement model state1
-    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
     recordsLog.Date      |> should equal date2
@@ -418,7 +418,7 @@ let ``Compute delta, price move, split 2:3`` () =
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
     let state1 = date1 |> runIncrement model state0
     let state2 = date2 |> runIncrement model state1
-    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
     recordsLog.Date      |> should equal date2
@@ -470,7 +470,7 @@ let ``Compute delta, price move, both dividend 10% and split 2:1`` () =
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
     let state1 = date1 |> runIncrement model state0
     let state2 = date2 |> runIncrement model state1
-    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
     recordsLog.Date      |> should equal date2
@@ -533,27 +533,27 @@ let ``Process orders, take position`` () =
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
     let state1 = date1 |> runIncrement model state0
     let state2 = date2 |> runIncrement model state1
-    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
-    let tradingLogsTakePosition = tradingLogs |> Array.filter (ifDetail isTakePosition)
-    let tradingLogsExitPosition = tradingLogs |> Array.filter (ifDetail isExitPosition)
-    let tradingLogsTermPosition = tradingLogs |> Array.filter (ifDetail isTermPosition)
+    let journalLogsTakePosition = journalLogs |> Array.filter (ifDetail isTakePosition)
+    let journalLogsExitPosition = journalLogs |> Array.filter (ifDetail isExitPosition)
+    let journalLogsTermPosition = journalLogs |> Array.filter (ifDetail isTermPosition)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
-    tradingLogsTakePosition |> Array.length |> should equal 1
-    tradingLogsExitPosition |> Array.length |> should equal 0
-    tradingLogsTermPosition |> Array.length |> should equal 0
+    journalLogsTakePosition |> Array.length |> should equal 1
+    journalLogsExitPosition |> Array.length |> should equal 0
+    journalLogsTermPosition |> Array.length |> should equal 0
     elementLogs             |> Array.length |> should equal 1
     nextTakeOrders          |> Array.length |> should equal 0
     nextExitOrders          |> Array.length |> should equal 1
 
-    let tradingLog = tradingLogsTakePosition.[0]
-    let detail = tradingLog-->toTakePosition
-    tradingLog.Date      |> should equal date2
-    tradingLog.Ticker    |> should equal "X"
-    tradingLog.Shares    |> should equal +100
-    tradingLog.Amount    |> should equal -10200.00m
+    let journalLog = journalLogsTakePosition.[0]
+    let detail = journalLog-->toTakePosition
+    journalLog.Date      |> should equal date2
+    journalLog.Ticker    |> should equal "X"
+    journalLog.Shares    |> should equal +100
+    journalLog.Amount    |> should equal -10200.00m
     detail.Shares        |> should equal 100u
     detail.Price         |> should equal 102.00m
 
@@ -630,36 +630,36 @@ let ``Process orders, take position and exit position on the same day`` () =
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
     let state1 = date1 |> runIncrement model state0
     let state2 = date2 |> runIncrement model state1
-    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
-    let tradingLogsTakePosition = tradingLogs |> Array.filter (ifDetail isTakePosition)
-    let tradingLogsExitPosition = tradingLogs |> Array.filter (ifDetail isExitPosition)
-    let tradingLogsTermPosition = tradingLogs |> Array.filter (ifDetail isTermPosition)
+    let journalLogsTakePosition = journalLogs |> Array.filter (ifDetail isTakePosition)
+    let journalLogsExitPosition = journalLogs |> Array.filter (ifDetail isExitPosition)
+    let journalLogsTermPosition = journalLogs |> Array.filter (ifDetail isTermPosition)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
-    tradingLogsTakePosition |> Array.length |> should equal 1
-    tradingLogsExitPosition |> Array.length |> should equal 1
-    tradingLogsTermPosition |> Array.length |> should equal 0
+    journalLogsTakePosition |> Array.length |> should equal 1
+    journalLogsExitPosition |> Array.length |> should equal 1
+    journalLogsTermPosition |> Array.length |> should equal 0
     elementLogs             |> Array.length |> should equal 1
     nextTakeOrders          |> Array.length |> should equal 0
     nextExitOrders          |> Array.length |> should equal 0
 
-    let tradingLog = tradingLogsTakePosition.[0]
-    let detail = tradingLog-->toTakePosition
-    tradingLog.Date      |> should equal date2
-    tradingLog.Ticker    |> should equal "X"
-    tradingLog.Shares    |> should equal +100
-    tradingLog.Amount    |> should equal -10200.00m
+    let journalLog = journalLogsTakePosition.[0]
+    let detail = journalLog-->toTakePosition
+    journalLog.Date      |> should equal date2
+    journalLog.Ticker    |> should equal "X"
+    journalLog.Shares    |> should equal +100
+    journalLog.Amount    |> should equal -10200.00m
     detail.Shares        |> should equal 100u
     detail.Price         |> should equal 102.00m
 
-    let tradingLog = tradingLogsExitPosition.[0]
-    let detail = tradingLog-->toExitPosition
-    tradingLog.Date      |> should equal date2
-    tradingLog.Ticker    |> should equal "X"
-    tradingLog.Shares    |> should equal -100
-    tradingLog.Amount    |> should equal +10101.00m
+    let journalLog = journalLogsExitPosition.[0]
+    let detail = journalLog-->toExitPosition
+    journalLog.Date      |> should equal date2
+    journalLog.Ticker    |> should equal "X"
+    journalLog.Shares    |> should equal -100
+    journalLog.Amount    |> should equal +10101.00m
     detail.Shares        |> should equal 100u
     detail.Price         |> should equal 101.01m
 
@@ -730,17 +730,17 @@ let ``Process orders, take position order ignored for discontinued instrument`` 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
     let state1 = date1 |> runIncrement model state0
     let state2 = date2 |> runIncrement model state1
-    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state2
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
-    let tradingLogsTakePosition = tradingLogs |> Array.filter (ifDetail isTakePosition)
-    let tradingLogsExitPosition = tradingLogs |> Array.filter (ifDetail isExitPosition)
-    let tradingLogsTermPosition = tradingLogs |> Array.filter (ifDetail isTermPosition)
+    let journalLogsTakePosition = journalLogs |> Array.filter (ifDetail isTakePosition)
+    let journalLogsExitPosition = journalLogs |> Array.filter (ifDetail isExitPosition)
+    let journalLogsTermPosition = journalLogs |> Array.filter (ifDetail isTermPosition)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
-    tradingLogsTakePosition |> Array.length |> should equal 0
-    tradingLogsExitPosition |> Array.length |> should equal 0
-    tradingLogsTermPosition |> Array.length |> should equal 0
+    journalLogsTakePosition |> Array.length |> should equal 0
+    journalLogsExitPosition |> Array.length |> should equal 0
+    journalLogsTermPosition |> Array.length |> should equal 0
     elementLogs             |> Array.length |> should equal 0
     nextTakeOrders          |> Array.length |> should equal 0
     nextExitOrders          |> Array.length |> should equal 0
@@ -794,27 +794,27 @@ let ``Process orders, take position, exit position`` () =
     let state1 = date1 |> runIncrement model state0
     let state2 = date2 |> runIncrement model state1
     let state3 = date3 |> runIncrement model state2
-    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state3
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
-    let tradingLogsTakePosition = tradingLogs |> Array.filter (ifDetail isTakePosition)
-    let tradingLogsExitPosition = tradingLogs |> Array.filter (ifDetail isExitPosition)
-    let tradingLogsTermPosition = tradingLogs |> Array.filter (ifDetail isTermPosition)
+    let journalLogsTakePosition = journalLogs |> Array.filter (ifDetail isTakePosition)
+    let journalLogsExitPosition = journalLogs |> Array.filter (ifDetail isExitPosition)
+    let journalLogsTermPosition = journalLogs |> Array.filter (ifDetail isTermPosition)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
-    tradingLogsTakePosition |> Array.length |> should equal 0
-    tradingLogsExitPosition |> Array.length |> should equal 1
-    tradingLogsTermPosition |> Array.length |> should equal 0
+    journalLogsTakePosition |> Array.length |> should equal 0
+    journalLogsExitPosition |> Array.length |> should equal 1
+    journalLogsTermPosition |> Array.length |> should equal 0
     elementLogs             |> Array.length |> should equal 1
     nextTakeOrders          |> Array.length |> should equal 0
     nextExitOrders          |> Array.length |> should equal 0
 
-    let tradingLog = tradingLogsExitPosition.[0]
-    let detail = tradingLog-->toExitPosition
-    tradingLog.Date      |> should equal date3
-    tradingLog.Ticker    |> should equal "X"
-    tradingLog.Shares    |> should equal -100
-    tradingLog.Amount    |> should equal +10202.00m
+    let journalLog = journalLogsExitPosition.[0]
+    let detail = journalLog-->toExitPosition
+    journalLog.Date      |> should equal date3
+    journalLog.Ticker    |> should equal "X"
+    journalLog.Shares    |> should equal -100
+    journalLog.Amount    |> should equal +10202.00m
     detail.Shares        |> should equal 100u
     detail.Price         |> should equal 102.02m
 
@@ -891,17 +891,17 @@ let ``Process orders, take position, hold position`` () =
     let state1 = date1 |> runIncrement model state0
     let state2 = date2 |> runIncrement model state1
     let state3 = date3 |> runIncrement model state2
-    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state3
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
-    let tradingLogsTakePosition = tradingLogs |> Array.filter (ifDetail isTakePosition)
-    let tradingLogsExitPosition = tradingLogs |> Array.filter (ifDetail isExitPosition)
-    let tradingLogsTermPosition = tradingLogs |> Array.filter (ifDetail isTermPosition)
+    let journalLogsTakePosition = journalLogs |> Array.filter (ifDetail isTakePosition)
+    let journalLogsExitPosition = journalLogs |> Array.filter (ifDetail isExitPosition)
+    let journalLogsTermPosition = journalLogs |> Array.filter (ifDetail isTermPosition)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
-    tradingLogsTakePosition |> Array.length |> should equal 0
-    tradingLogsExitPosition |> Array.length |> should equal 0
-    tradingLogsTermPosition |> Array.length |> should equal 0
+    journalLogsTakePosition |> Array.length |> should equal 0
+    journalLogsExitPosition |> Array.length |> should equal 0
+    journalLogsTermPosition |> Array.length |> should equal 0
     elementLogs             |> Array.length |> should equal 1
     nextTakeOrders          |> Array.length |> should equal 0
     nextExitOrders          |> Array.length |> should equal 1
@@ -985,27 +985,27 @@ let ``Process orders, take position, stack onto existing position`` () =
     let state1 = date1 |> runIncrement model state0
     let state2 = date2 |> runIncrement model state1
     let state3 = date3 |> runIncrement model state2
-    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state3
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
-    let tradingLogsTakePosition = tradingLogs |> Array.filter (ifDetail isTakePosition)
-    let tradingLogsExitPosition = tradingLogs |> Array.filter (ifDetail isExitPosition)
-    let tradingLogsTermPosition = tradingLogs |> Array.filter (ifDetail isTermPosition)
+    let journalLogsTakePosition = journalLogs |> Array.filter (ifDetail isTakePosition)
+    let journalLogsExitPosition = journalLogs |> Array.filter (ifDetail isExitPosition)
+    let journalLogsTermPosition = journalLogs |> Array.filter (ifDetail isTermPosition)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
-    tradingLogsTakePosition |> Array.length |> should equal 1
-    tradingLogsExitPosition |> Array.length |> should equal 0
-    tradingLogsTermPosition |> Array.length |> should equal 0
+    journalLogsTakePosition |> Array.length |> should equal 1
+    journalLogsExitPosition |> Array.length |> should equal 0
+    journalLogsTermPosition |> Array.length |> should equal 0
     elementLogs             |> Array.length |> should equal 1
     nextTakeOrders          |> Array.length |> should equal 0
     nextExitOrders          |> Array.length |> should equal 1
 
-    let tradingLog = tradingLogsTakePosition.[0]
-    let detail = tradingLog-->toTakePosition
-    tradingLog.Date      |> should equal date3
-    tradingLog.Ticker    |> should equal "X"
-    tradingLog.Shares    |> should equal +150
-    tradingLog.Amount    |> should equal -15450.00m
+    let journalLog = journalLogsTakePosition.[0]
+    let detail = journalLog-->toTakePosition
+    journalLog.Date      |> should equal date3
+    journalLog.Ticker    |> should equal "X"
+    journalLog.Shares    |> should equal +150
+    journalLog.Amount    |> should equal -15450.00m
     detail.Shares        |> should equal 150u
     detail.Price         |> should equal 103.00m
 
@@ -1085,27 +1085,27 @@ let ``Process orders, take position, terminate position for discontinued instrum
     let state1 = date1 |> runIncrement model state0
     let state2 = date2 |> runIncrement model state1
     let state3 = date3 |> runIncrement model state2
-    let (tradingLogs, elementLogs, summaryLog, nextOrders) = state3
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
-    let tradingLogsTakePosition = tradingLogs |> Array.filter (ifDetail isTakePosition)
-    let tradingLogsExitPosition = tradingLogs |> Array.filter (ifDetail isExitPosition)
-    let tradingLogsTermPosition = tradingLogs |> Array.filter (ifDetail isTermPosition)
+    let journalLogsTakePosition = journalLogs |> Array.filter (ifDetail isTakePosition)
+    let journalLogsExitPosition = journalLogs |> Array.filter (ifDetail isExitPosition)
+    let journalLogsTermPosition = journalLogs |> Array.filter (ifDetail isTermPosition)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
-    tradingLogsTakePosition |> Array.length |> should equal 0
-    tradingLogsExitPosition |> Array.length |> should equal 0
-    tradingLogsTermPosition |> Array.length |> should equal 1
+    journalLogsTakePosition |> Array.length |> should equal 0
+    journalLogsExitPosition |> Array.length |> should equal 0
+    journalLogsTermPosition |> Array.length |> should equal 1
     elementLogs             |> Array.length |> should equal 0
     nextTakeOrders          |> Array.length |> should equal 0
     nextExitOrders          |> Array.length |> should equal 0
 
-    let tradingLog = tradingLogsTermPosition.[0]
-    let detail = tradingLog-->toTermPosition
-    tradingLog.Date      |> should equal date3
-    tradingLog.Ticker    |> should equal "X"
-    tradingLog.Shares    |> should equal -100
-    tradingLog.Amount    |> should equal +10150.00m
+    let journalLog = journalLogsTermPosition.[0]
+    let detail = journalLog-->toTermPosition
+    journalLog.Date      |> should equal date3
+    journalLog.Ticker    |> should equal "X"
+    journalLog.Shares    |> should equal -100
+    journalLog.Amount    |> should equal +10150.00m
     detail.Shares        |> should equal 100u
     detail.Price         |> should equal 101.50m
 

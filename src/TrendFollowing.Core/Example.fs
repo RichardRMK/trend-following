@@ -125,4 +125,4 @@ let simulation =
       Model             = model
       ReportElementLog  = reportElementLog
       ReportSummaryLog  = reportSummaryLog
-      ReportTradingLog  = reportTradingLog }
+      ReportJournalLog  = reportJournalLog }

@@ -61,7 +61,7 @@ type JournalDetail =
     | ExitPosition of JournalExitPosition
     | TermPosition of JournalTermPosition
 
-type TradingLog =
+type JournalLog =
     { Date       : DateTime
       Ticker     : string
       Shares     : int
@@ -97,4 +97,4 @@ type Simulation<'T> =
       Model             : Model<'T>
       ReportElementLog  : ElementLog<'T> -> unit
       ReportSummaryLog  : SummaryLog -> unit
-      ReportTradingLog  : TradingLog -> unit }
+      ReportJournalLog  : JournalLog -> unit }

@@ -23,8 +23,8 @@ let private computeDelta dividend splitNew splitOld basis next prev =
     |> (/) next
     |> (+) -1m
 
-let private computeShares prevShares (tradingLogs : TradingLog[]) =
-    tradingLogs
+let private computeShares prevShares (journalLogs : JournalLog[]) =
+    journalLogs
     |> Seq.sumBy (fun x -> x.Shares)
     |> (+) (int prevShares)
     |> Checked.uint32
@@ -34,13 +34,13 @@ let private computeExitStop (exitOrder : ExitOrder option) =
 
 //-------------------------------------------------------------------------------------------------
 
-let private computeRecordsLogInit (quote : Quote) exitOrder tradingLogs =
+let private computeRecordsLogInit (quote : Quote) exitOrder journalLogs =
 
     let dividend = computeOptional 0m quote.Dividend
     let splitNew = computeOptional 1u quote.SplitNew
     let splitOld = computeOptional 1u quote.SplitOld
 
-    let shares = tradingLogs |> computeShares 0u
+    let shares = journalLogs |> computeShares 0u
     let exitStop = exitOrder |> computeExitStop
 
     { Date     = quote.Date
@@ -57,7 +57,7 @@ let private computeRecordsLogInit (quote : Quote) exitOrder tradingLogs =
       Shares   = shares
       ExitStop = exitStop }
 
-let private computeRecordsLogNext (quote : Quote) exitOrder tradingLogs prevRecordsLog =
+let private computeRecordsLogNext (quote : Quote) exitOrder journalLogs prevRecordsLog =
 
     let count = prevRecordsLog.Count + 1u
 
@@ -69,7 +69,7 @@ let private computeRecordsLogNext (quote : Quote) exitOrder tradingLogs prevReco
     let deltaHi = computeDelta quote.Hi prevRecordsLog.Hi
     let deltaLo = computeDelta quote.Lo prevRecordsLog.Lo
 
-    let shares = tradingLogs |> computeShares prevRecordsLog.Shares
+    let shares = journalLogs |> computeShares prevRecordsLog.Shares
     let exitStop = exitOrder |> computeExitStop
 
     { Date     = quote.Date
@@ -86,13 +86,13 @@ let private computeRecordsLogNext (quote : Quote) exitOrder tradingLogs prevReco
       Shares   = shares
       ExitStop = exitStop }
 
-let computeRecordsLog (quote : Quote) exitOrder tradingLogs = function
-    | None      -> computeRecordsLogInit quote exitOrder tradingLogs
-    | Some prev -> computeRecordsLogNext quote exitOrder tradingLogs prev
+let computeRecordsLog (quote : Quote) exitOrder journalLogs = function
+    | None      -> computeRecordsLogInit quote exitOrder journalLogs
+    | Some prev -> computeRecordsLogNext quote exitOrder journalLogs prev
 
 //-------------------------------------------------------------------------------------------------
 
-let computeElementLog model orders (tradingLogs : TradingLog[]) prevElementLogs (quote : Quote) =
+let computeElementLog model orders (journalLogs : JournalLog[]) prevElementLogs (quote : Quote) =
 
     let prevElementLog =
         prevElementLogs
@@ -103,14 +103,14 @@ let computeElementLog model orders (tradingLogs : TradingLog[]) prevElementLogs 
         |> Array.choose chooseExitOrder
         |> Array.tryFind (fun x -> quote.Ticker = x.Ticker)
 
-    let tradingLogs =
-        tradingLogs
+    let journalLogs =
+        journalLogs
         |> Array.filter (fun x -> quote.Ticker = x.Ticker)
 
     let recordsLog =
         prevElementLog
         |> Option.map (fun x -> x.RecordsLog)
-        |> computeRecordsLog quote exitOrder tradingLogs
+        |> computeRecordsLog quote exitOrder journalLogs
 
     let metricsLog =
         prevElementLog
@@ -122,10 +122,10 @@ let computeElementLog model orders (tradingLogs : TradingLog[]) prevElementLogs 
 
 //-------------------------------------------------------------------------------------------------
 
-let computeSummaryLog date (tradingLogs : TradingLog[]) elementLogs prevSummaryLog =
+let computeSummaryLog date (journalLogs : JournalLog[]) elementLogs prevSummaryLog =
 
     let cashValueAdjustment =
-        tradingLogs
+        journalLogs
         |> Seq.map (fun x -> x.Amount)
         |> Seq.sum
 
@@ -188,7 +188,7 @@ let computeExitOrders model elementLogs (takeOrders : TakeOrder[]) =
 
 let processTransactionsTakePosition (orders : Order[]) (quotes : Quote[]) =
 
-    let executeTransaction (order : TakeOrder) (quote : Quote) : TradingLog =
+    let executeTransaction (order : TakeOrder) (quote : Quote) : JournalLog =
 
         let detail : JournalTakePosition =
             { Shares = order.Shares
@@ -212,7 +212,7 @@ let processTransactionsTakePosition (orders : Order[]) (quotes : Quote[]) =
 
 let processTransactionsExitPosition (orders : Order[]) (quotes : Quote[]) =
 
-    let executeTransaction (order : ExitOrder) (quote : Quote) : TradingLog =
+    let executeTransaction (order : ExitOrder) (quote : Quote) : JournalLog =
 
         let detail : JournalExitPosition =
             { Shares = order.Shares
@@ -244,7 +244,7 @@ let processTransactionsTermPosition date prevElementLogs (quotes : Quote[]) =
     let hasAnOpenPosition prevElementLog =
         prevElementLog.RecordsLog.Shares <> 0u
 
-    let executeTransaction prevElementLog : TradingLog =
+    let executeTransaction prevElementLog : JournalLog =
 
         let detail : JournalTermPosition =
             { Shares = prevElementLog.RecordsLog.Shares
@@ -267,26 +267,26 @@ let runIncrement model (_, prevElementLogs, prevSummaryLog, orders) date =
 
     let quotes = model.GetQuotes date
 
-    let tradingLogsTakePosition = quotes |> processTransactionsTakePosition orders
-    let tradingLogsExitPosition = quotes |> processTransactionsExitPosition orders
-    let tradingLogsTermPosition = quotes |> processTransactionsTermPosition date prevElementLogs
-    let tradingLogs =
-        Array.concat [ tradingLogsTakePosition; tradingLogsExitPosition; tradingLogsTermPosition ]
+    let journalLogsTakePosition = quotes |> processTransactionsTakePosition orders
+    let journalLogsExitPosition = quotes |> processTransactionsExitPosition orders
+    let journalLogsTermPosition = quotes |> processTransactionsTermPosition date prevElementLogs
+    let journalLogs =
+        Array.concat [ journalLogsTakePosition; journalLogsExitPosition; journalLogsTermPosition ]
 
-    let elementLogs = quotes |> Array.map (computeElementLog model orders tradingLogs prevElementLogs)
-    let summaryLog = computeSummaryLog date tradingLogs elementLogs prevSummaryLog
+    let elementLogs = quotes |> Array.map (computeElementLog model orders journalLogs prevElementLogs)
+    let summaryLog = computeSummaryLog date journalLogs elementLogs prevSummaryLog
 
     let takeOrders = computeTakeOrders model elementLogs summaryLog
     let exitOrders = computeExitOrders model elementLogs takeOrders
     let nextOrders =
         Array.concat [ Array.map Take takeOrders; Array.map Exit exitOrders ]
 
-    (tradingLogs, elementLogs, summaryLog, nextOrders)
+    (journalLogs, elementLogs, summaryLog, nextOrders)
 
 let runSimulation simulation =
 
-    let reportResults (tradingLogs, elementLogs, summaryLog, _) =
-        tradingLogs |> Array.iter simulation.ReportTradingLog
+    let reportResults (journalLogs, elementLogs, summaryLog, _) =
+        journalLogs |> Array.iter simulation.ReportJournalLog
         elementLogs |> Array.iter simulation.ReportElementLog
         summaryLog |> simulation.ReportSummaryLog
 
@@ -299,10 +299,10 @@ let runSimulation simulation =
           Drawdown  = 0m
           Leverage  = 0m }
 
-    let tradingLogs = Array.empty
+    let journalLogs = Array.empty
     let elementLogs = Array.empty
     let nextOrders = Array.empty
 
     simulation.Dates
-    |> Seq.scan (runIncrement simulation.Model) (tradingLogs, elementLogs, summaryLog, nextOrders)
+    |> Seq.scan (runIncrement simulation.Model) (journalLogs, elementLogs, summaryLog, nextOrders)
     |> Seq.iter reportResults
