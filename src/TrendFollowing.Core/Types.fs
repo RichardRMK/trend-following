@@ -65,7 +65,7 @@ type JournalLog =
     { Date       : DateTime
       Ticker     : string
       Shares     : int
-      Amount     : decimal
+      Cash       : decimal
       Detail     : JournalDetail }
 
 //-------------------------------------------------------------------------------------------------

@@ -122,11 +122,11 @@ let computeElementLog model orders (journalLogs : JournalLog[]) prevElementLogs 
 
 //-------------------------------------------------------------------------------------------------
 
-let computeSummaryLog date (journalLogs : JournalLog[]) elementLogs prevSummaryLog =
+let computeSummaryLog date journalLogs elementLogs (prevSummaryLog : SummaryLog) =
 
     let cashValueAdjustment =
         journalLogs
-        |> Seq.map (fun x -> x.Amount)
+        |> Seq.map (fun x -> x.Cash)
         |> Seq.sum
 
     let position elementLog =
@@ -197,7 +197,7 @@ let processTransactionsExecuteTake (orders : Order[]) (quotes : Quote[]) =
         { Date   = quote.Date
           Ticker = order.Ticker
           Shares = detail.Shares |> (int)
-          Amount = detail.Shares |> (decimal >> negate) |> (*) detail.Price
+          Cash   = detail.Shares |> (decimal >> negate) |> (*) detail.Price
           Detail = ExecuteTake detail }
 
     let executeTransaction (order : TakeOrder) =
@@ -221,7 +221,7 @@ let processTransactionsExecuteExit (orders : Order[]) (quotes : Quote[]) =
         { Date   = quote.Date
           Ticker = order.Ticker
           Shares = detail.Shares |> (int >> negate)
-          Amount = detail.Shares |> (decimal) |> (*) detail.Price
+          Cash   = detail.Shares |> (decimal) |> (*) detail.Price
           Detail = ExecuteExit detail }
 
     let executeTransaction (order : ExitOrder) =
@@ -253,7 +253,7 @@ let processTransactionsLiquidation date prevElementLogs (quotes : Quote[]) =
         { Date   = date
           Ticker = prevElementLog.RecordsLog.Ticker
           Shares = detail.Shares |> (int >> negate)
-          Amount = detail.Shares |> (decimal) |> (*) detail.Price
+          Cash   = detail.Shares |> (decimal) |> (*) detail.Price
           Detail = Liquidation detail }
 
     prevElementLogs

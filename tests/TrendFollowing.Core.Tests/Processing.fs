@@ -554,7 +554,7 @@ let ``Process transactions, take position`` () =
     journalLog.Date        |> should equal date2
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal +100
-    journalLog.Amount      |> should equal -10200.00m
+    journalLog.Cash        |> should equal -10200.00m
     detail.Shares          |> should equal 100u
     detail.Price           |> should equal 102.00m
 
@@ -651,7 +651,7 @@ let ``Process transactions, take position and exit position on the same day`` ()
     journalLog.Date        |> should equal date2
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal +100
-    journalLog.Amount      |> should equal -10200.00m
+    journalLog.Cash        |> should equal -10200.00m
     detail.Shares          |> should equal 100u
     detail.Price           |> should equal 102.00m
 
@@ -660,7 +660,7 @@ let ``Process transactions, take position and exit position on the same day`` ()
     journalLog.Date        |> should equal date2
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal -100
-    journalLog.Amount      |> should equal +10101.00m
+    journalLog.Cash        |> should equal +10101.00m
     detail.Shares          |> should equal 100u
     detail.Price           |> should equal 101.01m
 
@@ -815,7 +815,7 @@ let ``Process transactions, take position, exit position`` () =
     journalLog.Date        |> should equal date3
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal -100
-    journalLog.Amount      |> should equal +10202.00m
+    journalLog.Cash        |> should equal +10202.00m
     detail.Shares          |> should equal 100u
     detail.Price           |> should equal 102.02m
 
@@ -1003,7 +1003,7 @@ let ``Process transactions, take position, liquidate position for discontinued i
     journalLog.Date        |> should equal date3
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal -100
-    journalLog.Amount      |> should equal +10150.00m
+    journalLog.Cash        |> should equal +10150.00m
     detail.Shares          |> should equal 100u
     detail.Price           |> should equal 101.50m
 
@@ -1086,7 +1086,7 @@ let ``Process transactions, take position, stack onto existing position`` () =
     journalLog.Date        |> should equal date3
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal +150
-    journalLog.Amount      |> should equal -15450.00m
+    journalLog.Cash        |> should equal -15450.00m
     detail.Shares          |> should equal 150u
     detail.Price           |> should equal 103.00m
 
