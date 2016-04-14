@@ -44,22 +44,22 @@ type SummaryLog =
 
 //-------------------------------------------------------------------------------------------------
 
-type JournalTakePosition =
+type JournalExecuteTake =
     { Shares     : uint32
       Price      : decimal }
 
-type JournalExitPosition =
+type JournalExecuteExit =
     { Shares     : uint32
       Price      : decimal }
 
-type JournalTermPosition =
+type JournalLiquidation =
     { Shares     : uint32
       Price      : decimal }
 
 type JournalDetail =
-    | TakePosition of JournalTakePosition
-    | ExitPosition of JournalExitPosition
-    | TermPosition of JournalTermPosition
+    | ExecuteTake of JournalExecuteTake
+    | ExecuteExit of JournalExecuteExit
+    | Liquidation of JournalLiquidation
 
 type JournalLog =
     { Date       : DateTime

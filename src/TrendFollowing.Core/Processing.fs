@@ -186,11 +186,11 @@ let computeExitOrders model elementLogs (takeOrders : TakeOrder[]) =
 
 //-------------------------------------------------------------------------------------------------
 
-let processTransactionsTakePosition (orders : Order[]) (quotes : Quote[]) =
+let processTransactionsExecuteTake (orders : Order[]) (quotes : Quote[]) =
 
-    let executeTransaction (order : TakeOrder) (quote : Quote) : JournalLog =
+    let generateJournalLog (order : TakeOrder) (quote : Quote) : JournalLog =
 
-        let detail : JournalTakePosition =
+        let detail : JournalExecuteTake =
             { Shares = order.Shares
               Price  = quote.Hi }
 
@@ -198,23 +198,23 @@ let processTransactionsTakePosition (orders : Order[]) (quotes : Quote[]) =
           Ticker = order.Ticker
           Shares = detail.Shares |> (int)
           Amount = detail.Shares |> (decimal >> negate) |> (*) detail.Price
-          Detail = TakePosition detail }
+          Detail = ExecuteTake detail }
 
-    let processTransaction (order : TakeOrder) =
+    let executeTransaction (order : TakeOrder) =
         quotes
         |> Array.tryFind (fun quote -> quote.Ticker = order.Ticker)
-        |> Option.map (executeTransaction order)
+        |> Option.map (generateJournalLog order)
 
     orders
     |> Array.choose chooseTakeOrder
-    |> Array.map processTransaction
+    |> Array.map executeTransaction
     |> Array.choose id
 
-let processTransactionsExitPosition (orders : Order[]) (quotes : Quote[]) =
+let processTransactionsExecuteExit (orders : Order[]) (quotes : Quote[]) =
 
-    let executeTransaction (order : ExitOrder) (quote : Quote) : JournalLog =
+    let generateJournalLog (order : ExitOrder) (quote : Quote) : JournalLog =
 
-        let detail : JournalExitPosition =
+        let detail : JournalExecuteExit =
             { Shares = order.Shares
               Price  = order.Stop }
 
@@ -222,31 +222,31 @@ let processTransactionsExitPosition (orders : Order[]) (quotes : Quote[]) =
           Ticker = order.Ticker
           Shares = detail.Shares |> (int >> negate)
           Amount = detail.Shares |> (decimal) |> (*) detail.Price
-          Detail = ExitPosition detail }
+          Detail = ExecuteExit detail }
 
-    let processTransaction (order : ExitOrder) =
+    let executeTransaction (order : ExitOrder) =
         quotes
         |> Array.tryFind (fun quote -> quote.Ticker = order.Ticker && quote.Lo <= order.Stop)
-        |> Option.map (executeTransaction order)
+        |> Option.map (generateJournalLog order)
 
     orders
     |> Array.choose chooseExitOrder
-    |> Array.map processTransaction
+    |> Array.map executeTransaction
     |> Array.choose id
 
-let processTransactionsTermPosition date prevElementLogs (quotes : Quote[]) =
+let processTransactionsLiquidation date prevElementLogs (quotes : Quote[]) =
 
-    let hasBeenTerminated prevElementLog =
+    let wasDiscontinued prevElementLog =
         quotes
         |> Array.exists (fun quote -> quote.Ticker = prevElementLog.RecordsLog.Ticker)
         |> not
 
-    let hasAnOpenPosition prevElementLog =
+    let hadOpenPosition prevElementLog =
         prevElementLog.RecordsLog.Shares <> 0u
 
-    let executeTransaction prevElementLog : JournalLog =
+    let generateJournalLog prevElementLog : JournalLog =
 
-        let detail : JournalTermPosition =
+        let detail : JournalLiquidation =
             { Shares = prevElementLog.RecordsLog.Shares
               Price  = prevElementLog.RecordsLog.Close }
 
@@ -254,12 +254,12 @@ let processTransactionsTermPosition date prevElementLogs (quotes : Quote[]) =
           Ticker = prevElementLog.RecordsLog.Ticker
           Shares = detail.Shares |> (int >> negate)
           Amount = detail.Shares |> (decimal) |> (*) detail.Price
-          Detail = TermPosition detail }
+          Detail = Liquidation detail }
 
     prevElementLogs
-    |> Array.filter hasBeenTerminated
-    |> Array.filter hasAnOpenPosition
-    |> Array.map executeTransaction
+    |> Array.filter wasDiscontinued
+    |> Array.filter hadOpenPosition
+    |> Array.map generateJournalLog
 
 //-------------------------------------------------------------------------------------------------
 
@@ -267,11 +267,11 @@ let runIncrement model (_, prevElementLogs, prevSummaryLog, orders) date =
 
     let quotes = model.GetQuotes date
 
-    let journalLogsTakePosition = quotes |> processTransactionsTakePosition orders
-    let journalLogsExitPosition = quotes |> processTransactionsExitPosition orders
-    let journalLogsTermPosition = quotes |> processTransactionsTermPosition date prevElementLogs
+    let journalLogsExecuteTake = quotes |> processTransactionsExecuteTake orders
+    let journalLogsExecuteExit = quotes |> processTransactionsExecuteExit orders
+    let journalLogsLiquidation = quotes |> processTransactionsLiquidation date prevElementLogs
     let journalLogs =
-        Array.concat [ journalLogsTakePosition; journalLogsExitPosition; journalLogsTermPosition ]
+        Array.concat [ journalLogsExecuteTake; journalLogsExecuteExit; journalLogsLiquidation ]
 
     let elementLogs = quotes |> Array.map (computeElementLog model orders journalLogs prevElementLogs)
     let summaryLog = computeSummaryLog date journalLogs elementLogs prevSummaryLog
