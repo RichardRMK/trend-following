@@ -81,27 +81,27 @@ let ``Baseline increment 1`` () =
     nextExitOrders         |> Array.length |> should equal 0
 
     let recordsLog = elementLogs.[0].RecordsLog
-    recordsLog.Date      |> should equal date1
-    recordsLog.Ticker    |> should equal "X"
-    recordsLog.Count     |> should equal 1u
-    recordsLog.Hi        |> should equal 101.00m
-    recordsLog.Lo        |> should equal 100.00m
-    recordsLog.Close     |> should equal 100.50m
-    recordsLog.Dividend  |> should equal 0m
-    recordsLog.SplitNew  |> should equal 1u
-    recordsLog.SplitOld  |> should equal 1u
-    recordsLog.DeltaHi   |> should equal 0m
-    recordsLog.DeltaLo   |> should equal 0m
-    recordsLog.Shares    |> should equal 0u
-    recordsLog.ExitStop  |> should equal None
+    recordsLog.Date        |> should equal date1
+    recordsLog.Ticker      |> should equal "X"
+    recordsLog.Count       |> should equal 1u
+    recordsLog.Hi          |> should equal 101.00m
+    recordsLog.Lo          |> should equal 100.00m
+    recordsLog.Close       |> should equal 100.50m
+    recordsLog.Dividend    |> should equal 0m
+    recordsLog.SplitNew    |> should equal 1u
+    recordsLog.SplitOld    |> should equal 1u
+    recordsLog.DeltaHi     |> should equal 0m
+    recordsLog.DeltaLo     |> should equal 0m
+    recordsLog.Shares      |> should equal 0u
+    recordsLog.ExitStop    |> should equal None
 
-    summaryLog.Date      |> should equal date1
-    summaryLog.Cash      |> should equal 1000000.00m
-    summaryLog.Equity    |> should equal 1000000.00m
-    summaryLog.ExitValue |> should equal 1000000.00m
-    summaryLog.Peak      |> should equal 1000000.00m
-    summaryLog.Drawdown  |> should equal 0m
-    summaryLog.Leverage  |> should equal 0m
+    summaryLog.Date        |> should equal date1
+    summaryLog.Cash        |> should equal 1000000.00m
+    summaryLog.Equity      |> should equal 1000000.00m
+    summaryLog.ExitValue   |> should equal 1000000.00m
+    summaryLog.Peak        |> should equal 1000000.00m
+    summaryLog.Drawdown    |> should equal 0m
+    summaryLog.Leverage    |> should equal 0m
 
 //-------------------------------------------------------------------------------------------------
 
@@ -154,27 +154,27 @@ let ``Baseline increment 2`` () =
     nextExitOrders         |> Array.length |> should equal 0
 
     let recordsLog = elementLogs.[0].RecordsLog
-    recordsLog.Date      |> should equal date2
-    recordsLog.Ticker    |> should equal "X"
-    recordsLog.Count     |> should equal 2u
-    recordsLog.Hi        |> should equal 102.00m
-    recordsLog.Lo        |> should equal 101.00m
-    recordsLog.Close     |> should equal 101.50m
-    recordsLog.Dividend  |> should equal 0m
-    recordsLog.SplitNew  |> should equal 1u
-    recordsLog.SplitOld  |> should equal 1u
-    recordsLog.DeltaHi   |> should equal (1.00m / 101.00m)
-    recordsLog.DeltaLo   |> should equal (1.00m / 100.00m)
-    recordsLog.Shares    |> should equal 0u
-    recordsLog.ExitStop  |> should equal None
+    recordsLog.Date        |> should equal date2
+    recordsLog.Ticker      |> should equal "X"
+    recordsLog.Count       |> should equal 2u
+    recordsLog.Hi          |> should equal 102.00m
+    recordsLog.Lo          |> should equal 101.00m
+    recordsLog.Close       |> should equal 101.50m
+    recordsLog.Dividend    |> should equal 0m
+    recordsLog.SplitNew    |> should equal 1u
+    recordsLog.SplitOld    |> should equal 1u
+    recordsLog.DeltaHi     |> should equal (1.00m / 101.00m)
+    recordsLog.DeltaLo     |> should equal (1.00m / 100.00m)
+    recordsLog.Shares      |> should equal 0u
+    recordsLog.ExitStop    |> should equal None
 
-    summaryLog.Date      |> should equal date2
-    summaryLog.Cash      |> should equal 1000000.00m
-    summaryLog.Equity    |> should equal 1000000.00m
-    summaryLog.ExitValue |> should equal 1000000.00m
-    summaryLog.Peak      |> should equal 1000000.00m
-    summaryLog.Drawdown  |> should equal 0m
-    summaryLog.Leverage  |> should equal 0m
+    summaryLog.Date        |> should equal date2
+    summaryLog.Cash        |> should equal 1000000.00m
+    summaryLog.Equity      |> should equal 1000000.00m
+    summaryLog.ExitValue   |> should equal 1000000.00m
+    summaryLog.Peak        |> should equal 1000000.00m
+    summaryLog.Drawdown    |> should equal 0m
+    summaryLog.Leverage    |> should equal 0m
 
 //-------------------------------------------------------------------------------------------------
 
@@ -214,19 +214,19 @@ let ``Compute delta, price move`` () =
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
-    recordsLog.Date      |> should equal date2
-    recordsLog.Ticker    |> should equal "X"
-    recordsLog.Count     |> should equal 2u
-    recordsLog.Hi        |> should equal 108.00m
-    recordsLog.Lo        |> should equal 106.00m
-    recordsLog.Close     |> should equal 107.00m
-    recordsLog.Dividend  |> should equal 0m
-    recordsLog.SplitNew  |> should equal 1u
-    recordsLog.SplitOld  |> should equal 1u
-    recordsLog.DeltaHi   |> should equal ((108.00m / 107.00m) - 1m)
-    recordsLog.DeltaLo   |> should equal ((106.00m / 105.00m) - 1m)
-    recordsLog.Shares    |> should equal 0u
-    recordsLog.ExitStop  |> should equal None
+    recordsLog.Date        |> should equal date2
+    recordsLog.Ticker      |> should equal "X"
+    recordsLog.Count       |> should equal 2u
+    recordsLog.Hi          |> should equal 108.00m
+    recordsLog.Lo          |> should equal 106.00m
+    recordsLog.Close       |> should equal 107.00m
+    recordsLog.Dividend    |> should equal 0m
+    recordsLog.SplitNew    |> should equal 1u
+    recordsLog.SplitOld    |> should equal 1u
+    recordsLog.DeltaHi     |> should equal ((108.00m / 107.00m) - 1m)
+    recordsLog.DeltaLo     |> should equal ((106.00m / 105.00m) - 1m)
+    recordsLog.Shares      |> should equal 0u
+    recordsLog.ExitStop    |> should equal None
 
 //-------------------------------------------------------------------------------------------------
 
@@ -266,19 +266,19 @@ let ``Compute delta, price move, dividend 10%`` () =
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
-    recordsLog.Date      |> should equal date2
-    recordsLog.Ticker    |> should equal "X"
-    recordsLog.Count     |> should equal 2u
-    recordsLog.Hi        |> should equal 97.20m
-    recordsLog.Lo        |> should equal 95.40m
-    recordsLog.Close     |> should equal 96.30m
-    recordsLog.Dividend  |> should equal 10.60m
-    recordsLog.SplitNew  |> should equal 1u
-    recordsLog.SplitOld  |> should equal 1u
-    recordsLog.DeltaHi   |> should equal ((97.20m / (107.00m * (1m - (10.60m / 106.00m)))) - 1m)
-    recordsLog.DeltaLo   |> should equal ((95.40m / (105.00m * (1m - (10.60m / 106.00m)))) - 1m)
-    recordsLog.Shares    |> should equal 0u
-    recordsLog.ExitStop  |> should equal None
+    recordsLog.Date        |> should equal date2
+    recordsLog.Ticker      |> should equal "X"
+    recordsLog.Count       |> should equal 2u
+    recordsLog.Hi          |> should equal 97.20m
+    recordsLog.Lo          |> should equal 95.40m
+    recordsLog.Close       |> should equal 96.30m
+    recordsLog.Dividend    |> should equal 10.60m
+    recordsLog.SplitNew    |> should equal 1u
+    recordsLog.SplitOld    |> should equal 1u
+    recordsLog.DeltaHi     |> should equal ((97.20m / (107.00m * (1m - (10.60m / 106.00m)))) - 1m)
+    recordsLog.DeltaLo     |> should equal ((95.40m / (105.00m * (1m - (10.60m / 106.00m)))) - 1m)
+    recordsLog.Shares      |> should equal 0u
+    recordsLog.ExitStop    |> should equal None
 
 //-------------------------------------------------------------------------------------------------
 
@@ -318,19 +318,19 @@ let ``Compute delta, price move, dividend 50%`` () =
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
-    recordsLog.Date      |> should equal date2
-    recordsLog.Ticker    |> should equal "X"
-    recordsLog.Count     |> should equal 2u
-    recordsLog.Hi        |> should equal 54.00m
-    recordsLog.Lo        |> should equal 53.00m
-    recordsLog.Close     |> should equal 53.50m
-    recordsLog.Dividend  |> should equal 53.00m
-    recordsLog.SplitNew  |> should equal 1u
-    recordsLog.SplitOld  |> should equal 1u
-    recordsLog.DeltaHi   |> should equal ((54.00m / (107.00m * (1m - (53.00m / 106.00m)))) - 1m)
-    recordsLog.DeltaLo   |> should equal ((53.00m / (105.00m * (1m - (53.00m / 106.00m)))) - 1m)
-    recordsLog.Shares    |> should equal 0u
-    recordsLog.ExitStop  |> should equal None
+    recordsLog.Date        |> should equal date2
+    recordsLog.Ticker      |> should equal "X"
+    recordsLog.Count       |> should equal 2u
+    recordsLog.Hi          |> should equal 54.00m
+    recordsLog.Lo          |> should equal 53.00m
+    recordsLog.Close       |> should equal 53.50m
+    recordsLog.Dividend    |> should equal 53.00m
+    recordsLog.SplitNew    |> should equal 1u
+    recordsLog.SplitOld    |> should equal 1u
+    recordsLog.DeltaHi     |> should equal ((54.00m / (107.00m * (1m - (53.00m / 106.00m)))) - 1m)
+    recordsLog.DeltaLo     |> should equal ((53.00m / (105.00m * (1m - (53.00m / 106.00m)))) - 1m)
+    recordsLog.Shares      |> should equal 0u
+    recordsLog.ExitStop    |> should equal None
 
 //-------------------------------------------------------------------------------------------------
 
@@ -370,19 +370,19 @@ let ``Compute delta, price move, split 2:1`` () =
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
-    recordsLog.Date      |> should equal date2
-    recordsLog.Ticker    |> should equal "X"
-    recordsLog.Count     |> should equal 2u
-    recordsLog.Hi        |> should equal 54.00m
-    recordsLog.Lo        |> should equal 53.00m
-    recordsLog.Close     |> should equal 53.50m
-    recordsLog.Dividend  |> should equal 0m
-    recordsLog.SplitNew  |> should equal 2u
-    recordsLog.SplitOld  |> should equal 1u
-    recordsLog.DeltaHi   |> should equal ((54.00m / (107.00m * (1m / 2m))) - 1m)
-    recordsLog.DeltaLo   |> should equal ((53.00m / (105.00m * (1m / 2m))) - 1m)
-    recordsLog.Shares    |> should equal 0u
-    recordsLog.ExitStop  |> should equal None
+    recordsLog.Date        |> should equal date2
+    recordsLog.Ticker      |> should equal "X"
+    recordsLog.Count       |> should equal 2u
+    recordsLog.Hi          |> should equal 54.00m
+    recordsLog.Lo          |> should equal 53.00m
+    recordsLog.Close       |> should equal 53.50m
+    recordsLog.Dividend    |> should equal 0m
+    recordsLog.SplitNew    |> should equal 2u
+    recordsLog.SplitOld    |> should equal 1u
+    recordsLog.DeltaHi     |> should equal ((54.00m / (107.00m * (1m / 2m))) - 1m)
+    recordsLog.DeltaLo     |> should equal ((53.00m / (105.00m * (1m / 2m))) - 1m)
+    recordsLog.Shares      |> should equal 0u
+    recordsLog.ExitStop    |> should equal None
 
 //-------------------------------------------------------------------------------------------------
 
@@ -422,19 +422,19 @@ let ``Compute delta, price move, split 2:3`` () =
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
-    recordsLog.Date      |> should equal date2
-    recordsLog.Ticker    |> should equal "X"
-    recordsLog.Count     |> should equal 2u
-    recordsLog.Hi        |> should equal 162.00m
-    recordsLog.Lo        |> should equal 159.00m
-    recordsLog.Close     |> should equal 160.50m
-    recordsLog.Dividend  |> should equal 0m
-    recordsLog.SplitNew  |> should equal 2u
-    recordsLog.SplitOld  |> should equal 3u
-    recordsLog.DeltaHi   |> should equal ((162.00m / (107.00m * (3m / 2m))) - 1m)
-    recordsLog.DeltaLo   |> should equal ((159.00m / (105.00m * (3m / 2m))) - 1m)
-    recordsLog.Shares    |> should equal 0u
-    recordsLog.ExitStop  |> should equal None
+    recordsLog.Date        |> should equal date2
+    recordsLog.Ticker      |> should equal "X"
+    recordsLog.Count       |> should equal 2u
+    recordsLog.Hi          |> should equal 162.00m
+    recordsLog.Lo          |> should equal 159.00m
+    recordsLog.Close       |> should equal 160.50m
+    recordsLog.Dividend    |> should equal 0m
+    recordsLog.SplitNew    |> should equal 2u
+    recordsLog.SplitOld    |> should equal 3u
+    recordsLog.DeltaHi     |> should equal ((162.00m / (107.00m * (3m / 2m))) - 1m)
+    recordsLog.DeltaLo     |> should equal ((159.00m / (105.00m * (3m / 2m))) - 1m)
+    recordsLog.Shares      |> should equal 0u
+    recordsLog.ExitStop    |> should equal None
 
 //-------------------------------------------------------------------------------------------------
 
@@ -474,19 +474,19 @@ let ``Compute delta, price move, both dividend 10% and split 2:1`` () =
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
-    recordsLog.Date      |> should equal date2
-    recordsLog.Ticker    |> should equal "X"
-    recordsLog.Count     |> should equal 2u
-    recordsLog.Hi        |> should equal 48.60m
-    recordsLog.Lo        |> should equal 47.70m
-    recordsLog.Close     |> should equal 48.15m
-    recordsLog.Dividend  |> should equal 10.60m
-    recordsLog.SplitNew  |> should equal 2u
-    recordsLog.SplitOld  |> should equal 1u
-    recordsLog.DeltaHi   |> should equal ((48.60m / (107.00m * (1m - (10.60m / 106.00m)) * (1m / 2m))) - 1m)
-    recordsLog.DeltaLo   |> should equal ((47.70m / (105.00m * (1m - (10.60m / 106.00m)) * (1m / 2m))) - 1m)
-    recordsLog.Shares    |> should equal 0u
-    recordsLog.ExitStop  |> should equal None
+    recordsLog.Date        |> should equal date2
+    recordsLog.Ticker      |> should equal "X"
+    recordsLog.Count       |> should equal 2u
+    recordsLog.Hi          |> should equal 48.60m
+    recordsLog.Lo          |> should equal 47.70m
+    recordsLog.Close       |> should equal 48.15m
+    recordsLog.Dividend    |> should equal 10.60m
+    recordsLog.SplitNew    |> should equal 2u
+    recordsLog.SplitOld    |> should equal 1u
+    recordsLog.DeltaHi     |> should equal ((48.60m / (107.00m * (1m - (10.60m / 106.00m)) * (1m / 2m))) - 1m)
+    recordsLog.DeltaLo     |> should equal ((47.70m / (105.00m * (1m - (10.60m / 106.00m)) * (1m / 2m))) - 1m)
+    recordsLog.Shares      |> should equal 0u
+    recordsLog.ExitStop    |> should equal None
 
 //-------------------------------------------------------------------------------------------------
 
@@ -551,40 +551,40 @@ let ``Process transactions, take position`` () =
 
     let journalLog = journalLogsExecuteTake.[0]
     let detail = journalLog -~> ExecuteTake
-    journalLog.Date      |> should equal date2
-    journalLog.Ticker    |> should equal "X"
-    journalLog.Shares    |> should equal +100
-    journalLog.Amount    |> should equal -10200.00m
-    detail.Shares        |> should equal 100u
-    detail.Price         |> should equal 102.00m
+    journalLog.Date        |> should equal date2
+    journalLog.Ticker      |> should equal "X"
+    journalLog.Shares      |> should equal +100
+    journalLog.Amount      |> should equal -10200.00m
+    detail.Shares          |> should equal 100u
+    detail.Price           |> should equal 102.00m
 
     let recordsLog = elementLogs.[0].RecordsLog
-    recordsLog.Date      |> should equal date2
-    recordsLog.Ticker    |> should equal "X"
-    recordsLog.Count     |> should equal 2u
-    recordsLog.Hi        |> should equal 102.00m
-    recordsLog.Lo        |> should equal 101.00m
-    recordsLog.Close     |> should equal 101.50m
-    recordsLog.Dividend  |> should equal 0m
-    recordsLog.SplitNew  |> should equal 1u
-    recordsLog.SplitOld  |> should equal 1u
-    recordsLog.DeltaHi   |> should equal (1.00m / 101.00m)
-    recordsLog.DeltaLo   |> should equal (1.00m / 100.00m)
-    recordsLog.Shares    |> should equal 100u
-    recordsLog.ExitStop  |> should equal (Some 100.01m)
+    recordsLog.Date        |> should equal date2
+    recordsLog.Ticker      |> should equal "X"
+    recordsLog.Count       |> should equal 2u
+    recordsLog.Hi          |> should equal 102.00m
+    recordsLog.Lo          |> should equal 101.00m
+    recordsLog.Close       |> should equal 101.50m
+    recordsLog.Dividend    |> should equal 0m
+    recordsLog.SplitNew    |> should equal 1u
+    recordsLog.SplitOld    |> should equal 1u
+    recordsLog.DeltaHi     |> should equal (1.00m / 101.00m)
+    recordsLog.DeltaLo     |> should equal (1.00m / 100.00m)
+    recordsLog.Shares      |> should equal 100u
+    recordsLog.ExitStop    |> should equal (Some 100.01m)
 
-    summaryLog.Date      |> should equal date2
-    summaryLog.Cash      |> should equal  989800.00m
-    summaryLog.Equity    |> should equal  999950.00m
-    summaryLog.ExitValue |> should equal  999801.00m
-    summaryLog.Peak      |> should equal 1000000.00m
-    summaryLog.Drawdown  |> should equal -0.0001990m
-    summaryLog.Leverage  |> should equal (1m - (989800.00m / 999801.00m))
+    summaryLog.Date        |> should equal date2
+    summaryLog.Cash        |> should equal  989800.00m
+    summaryLog.Equity      |> should equal  999950.00m
+    summaryLog.ExitValue   |> should equal  999801.00m
+    summaryLog.Peak        |> should equal 1000000.00m
+    summaryLog.Drawdown    |> should equal -0.0001990m
+    summaryLog.Leverage    |> should equal (1m - (989800.00m / 999801.00m))
 
     let nextExitOrder = nextExitOrders.[0]
-    nextExitOrder.Ticker |> should equal "X"
-    nextExitOrder.Shares |> should equal 100u
-    nextExitOrder.Stop   |> should equal 100.02m
+    nextExitOrder.Ticker   |> should equal "X"
+    nextExitOrder.Shares   |> should equal 100u
+    nextExitOrder.Stop     |> should equal 100.02m
 
 //-------------------------------------------------------------------------------------------------
 
@@ -648,44 +648,44 @@ let ``Process transactions, take position and exit position on the same day`` ()
 
     let journalLog = journalLogsExecuteTake.[0]
     let detail = journalLog -~> ExecuteTake
-    journalLog.Date      |> should equal date2
-    journalLog.Ticker    |> should equal "X"
-    journalLog.Shares    |> should equal +100
-    journalLog.Amount    |> should equal -10200.00m
-    detail.Shares        |> should equal 100u
-    detail.Price         |> should equal 102.00m
+    journalLog.Date        |> should equal date2
+    journalLog.Ticker      |> should equal "X"
+    journalLog.Shares      |> should equal +100
+    journalLog.Amount      |> should equal -10200.00m
+    detail.Shares          |> should equal 100u
+    detail.Price           |> should equal 102.00m
 
     let journalLog = journalLogsExecuteExit.[0]
     let detail = journalLog -~> ExecuteExit
-    journalLog.Date      |> should equal date2
-    journalLog.Ticker    |> should equal "X"
-    journalLog.Shares    |> should equal -100
-    journalLog.Amount    |> should equal +10101.00m
-    detail.Shares        |> should equal 100u
-    detail.Price         |> should equal 101.01m
+    journalLog.Date        |> should equal date2
+    journalLog.Ticker      |> should equal "X"
+    journalLog.Shares      |> should equal -100
+    journalLog.Amount      |> should equal +10101.00m
+    detail.Shares          |> should equal 100u
+    detail.Price           |> should equal 101.01m
 
     let recordsLog = elementLogs.[0].RecordsLog
-    recordsLog.Date      |> should equal date2
-    recordsLog.Ticker    |> should equal "X"
-    recordsLog.Count     |> should equal 2u
-    recordsLog.Hi        |> should equal 102.00m
-    recordsLog.Lo        |> should equal 101.00m
-    recordsLog.Close     |> should equal 101.50m
-    recordsLog.Dividend  |> should equal 0m
-    recordsLog.SplitNew  |> should equal 1u
-    recordsLog.SplitOld  |> should equal 1u
-    recordsLog.DeltaHi   |> should equal (1.00m / 101.00m)
-    recordsLog.DeltaLo   |> should equal (1.00m / 100.00m)
-    recordsLog.Shares    |> should equal 0u
-    recordsLog.ExitStop  |> should equal (Some 101.01m)
+    recordsLog.Date        |> should equal date2
+    recordsLog.Ticker      |> should equal "X"
+    recordsLog.Count       |> should equal 2u
+    recordsLog.Hi          |> should equal 102.00m
+    recordsLog.Lo          |> should equal 101.00m
+    recordsLog.Close       |> should equal 101.50m
+    recordsLog.Dividend    |> should equal 0m
+    recordsLog.SplitNew    |> should equal 1u
+    recordsLog.SplitOld    |> should equal 1u
+    recordsLog.DeltaHi     |> should equal (1.00m / 101.00m)
+    recordsLog.DeltaLo     |> should equal (1.00m / 100.00m)
+    recordsLog.Shares      |> should equal 0u
+    recordsLog.ExitStop    |> should equal (Some 101.01m)
 
-    summaryLog.Date      |> should equal date2
-    summaryLog.Cash      |> should equal  999901.00m
-    summaryLog.Equity    |> should equal  999901.00m
-    summaryLog.ExitValue |> should equal  999901.00m
-    summaryLog.Peak      |> should equal 1000000.00m
-    summaryLog.Drawdown  |> should equal -0.0000990m
-    summaryLog.Leverage  |> should equal 0m
+    summaryLog.Date        |> should equal date2
+    summaryLog.Cash        |> should equal  999901.00m
+    summaryLog.Equity      |> should equal  999901.00m
+    summaryLog.ExitValue   |> should equal  999901.00m
+    summaryLog.Peak        |> should equal 1000000.00m
+    summaryLog.Drawdown    |> should equal -0.0000990m
+    summaryLog.Leverage    |> should equal 0m
 
 //-------------------------------------------------------------------------------------------------
 
@@ -812,35 +812,35 @@ let ``Process transactions, take position, exit position`` () =
 
     let journalLog = journalLogsExecuteExit.[0]
     let detail = journalLog -~> ExecuteExit
-    journalLog.Date      |> should equal date3
-    journalLog.Ticker    |> should equal "X"
-    journalLog.Shares    |> should equal -100
-    journalLog.Amount    |> should equal +10202.00m
-    detail.Shares        |> should equal 100u
-    detail.Price         |> should equal 102.02m
+    journalLog.Date        |> should equal date3
+    journalLog.Ticker      |> should equal "X"
+    journalLog.Shares      |> should equal -100
+    journalLog.Amount      |> should equal +10202.00m
+    detail.Shares          |> should equal 100u
+    detail.Price           |> should equal 102.02m
 
     let recordsLog = elementLogs.[0].RecordsLog
-    recordsLog.Date      |> should equal date3
-    recordsLog.Ticker    |> should equal "X"
-    recordsLog.Count     |> should equal 3u
-    recordsLog.Hi        |> should equal 103.00m
-    recordsLog.Lo        |> should equal 102.00m
-    recordsLog.Close     |> should equal 102.50m
-    recordsLog.Dividend  |> should equal 0m
-    recordsLog.SplitNew  |> should equal 1u
-    recordsLog.SplitOld  |> should equal 1u
-    recordsLog.DeltaHi   |> should equal (1.00m / 102.00m)
-    recordsLog.DeltaLo   |> should equal (1.00m / 101.00m)
-    recordsLog.Shares    |> should equal 0u
-    recordsLog.ExitStop  |> should equal (Some 102.02m)
+    recordsLog.Date        |> should equal date3
+    recordsLog.Ticker      |> should equal "X"
+    recordsLog.Count       |> should equal 3u
+    recordsLog.Hi          |> should equal 103.00m
+    recordsLog.Lo          |> should equal 102.00m
+    recordsLog.Close       |> should equal 102.50m
+    recordsLog.Dividend    |> should equal 0m
+    recordsLog.SplitNew    |> should equal 1u
+    recordsLog.SplitOld    |> should equal 1u
+    recordsLog.DeltaHi     |> should equal (1.00m / 102.00m)
+    recordsLog.DeltaLo     |> should equal (1.00m / 101.00m)
+    recordsLog.Shares      |> should equal 0u
+    recordsLog.ExitStop    |> should equal (Some 102.02m)
 
-    summaryLog.Date      |> should equal date3
-    summaryLog.Cash      |> should equal 1000002.00m
-    summaryLog.Equity    |> should equal 1000002.00m
-    summaryLog.ExitValue |> should equal 1000002.00m
-    summaryLog.Peak      |> should equal 1000002.00m
-    summaryLog.Drawdown  |> should equal 0m
-    summaryLog.Leverage  |> should equal 0m
+    summaryLog.Date        |> should equal date3
+    summaryLog.Cash        |> should equal 1000002.00m
+    summaryLog.Equity      |> should equal 1000002.00m
+    summaryLog.ExitValue   |> should equal 1000002.00m
+    summaryLog.Peak        |> should equal 1000002.00m
+    summaryLog.Drawdown    |> should equal 0m
+    summaryLog.Leverage    |> should equal 0m
 
 //-------------------------------------------------------------------------------------------------
 
@@ -908,32 +908,32 @@ let ``Process transactions, take position, hold position`` () =
     nextExitOrders         |> Array.length |> should equal 1
 
     let recordsLog = elementLogs.[0].RecordsLog
-    recordsLog.Date      |> should equal date3
-    recordsLog.Ticker    |> should equal "X"
-    recordsLog.Count     |> should equal 3u
-    recordsLog.Hi        |> should equal 103.00m
-    recordsLog.Lo        |> should equal 102.00m
-    recordsLog.Close     |> should equal 102.50m
-    recordsLog.Dividend  |> should equal 0m
-    recordsLog.SplitNew  |> should equal 1u
-    recordsLog.SplitOld  |> should equal 1u
-    recordsLog.DeltaHi   |> should equal (1.00m / 102.00m)
-    recordsLog.DeltaLo   |> should equal (1.00m / 101.00m)
-    recordsLog.Shares    |> should equal 100u
-    recordsLog.ExitStop  |> should equal (Some 100.02m)
+    recordsLog.Date        |> should equal date3
+    recordsLog.Ticker      |> should equal "X"
+    recordsLog.Count       |> should equal 3u
+    recordsLog.Hi          |> should equal 103.00m
+    recordsLog.Lo          |> should equal 102.00m
+    recordsLog.Close       |> should equal 102.50m
+    recordsLog.Dividend    |> should equal 0m
+    recordsLog.SplitNew    |> should equal 1u
+    recordsLog.SplitOld    |> should equal 1u
+    recordsLog.DeltaHi     |> should equal (1.00m / 102.00m)
+    recordsLog.DeltaLo     |> should equal (1.00m / 101.00m)
+    recordsLog.Shares      |> should equal 100u
+    recordsLog.ExitStop    |> should equal (Some 100.02m)
 
-    summaryLog.Date      |> should equal date3
-    summaryLog.Cash      |> should equal  989800.00m
-    summaryLog.Equity    |> should equal 1000050.00m
-    summaryLog.ExitValue |> should equal  999802.00m
-    summaryLog.Peak      |> should equal 1000000.00m
-    summaryLog.Drawdown  |> should equal -0.0001980m
-    summaryLog.Leverage  |> should equal (1m - (989800.00m / 999802.00m))
+    summaryLog.Date        |> should equal date3
+    summaryLog.Cash        |> should equal  989800.00m
+    summaryLog.Equity      |> should equal 1000050.00m
+    summaryLog.ExitValue   |> should equal  999802.00m
+    summaryLog.Peak        |> should equal 1000000.00m
+    summaryLog.Drawdown    |> should equal -0.0001980m
+    summaryLog.Leverage    |> should equal (1m - (989800.00m / 999802.00m))
 
     let nextExitOrder = nextExitOrders.[0]
-    nextExitOrder.Ticker |> should equal "X"
-    nextExitOrder.Shares |> should equal 100u
-    nextExitOrder.Stop   |> should equal 100.03m
+    nextExitOrder.Ticker   |> should equal "X"
+    nextExitOrder.Shares   |> should equal 100u
+    nextExitOrder.Stop     |> should equal 100.03m
 
 //-------------------------------------------------------------------------------------------------
 
@@ -1000,20 +1000,20 @@ let ``Process transactions, take position, liquidate position for discontinued i
 
     let journalLog = journalLogsLiquidation.[0]
     let detail = journalLog -~> Liquidation
-    journalLog.Date      |> should equal date3
-    journalLog.Ticker    |> should equal "X"
-    journalLog.Shares    |> should equal -100
-    journalLog.Amount    |> should equal +10150.00m
-    detail.Shares        |> should equal 100u
-    detail.Price         |> should equal 101.50m
+    journalLog.Date        |> should equal date3
+    journalLog.Ticker      |> should equal "X"
+    journalLog.Shares      |> should equal -100
+    journalLog.Amount      |> should equal +10150.00m
+    detail.Shares          |> should equal 100u
+    detail.Price           |> should equal 101.50m
 
-    summaryLog.Date      |> should equal date3
-    summaryLog.Cash      |> should equal  999950.00m
-    summaryLog.Equity    |> should equal  999950.00m
-    summaryLog.ExitValue |> should equal  999950.00m
-    summaryLog.Peak      |> should equal 1000000.00m
-    summaryLog.Drawdown  |> should equal -0.0000500m
-    summaryLog.Leverage  |> should equal 0m
+    summaryLog.Date        |> should equal date3
+    summaryLog.Cash        |> should equal  999950.00m
+    summaryLog.Equity      |> should equal  999950.00m
+    summaryLog.ExitValue   |> should equal  999950.00m
+    summaryLog.Peak        |> should equal 1000000.00m
+    summaryLog.Drawdown    |> should equal -0.0000500m
+    summaryLog.Leverage    |> should equal 0m
 
 //-------------------------------------------------------------------------------------------------
 
@@ -1083,37 +1083,37 @@ let ``Process transactions, take position, stack onto existing position`` () =
 
     let journalLog = journalLogsExecuteTake.[0]
     let detail = journalLog -~> ExecuteTake
-    journalLog.Date      |> should equal date3
-    journalLog.Ticker    |> should equal "X"
-    journalLog.Shares    |> should equal +150
-    journalLog.Amount    |> should equal -15450.00m
-    detail.Shares        |> should equal 150u
-    detail.Price         |> should equal 103.00m
+    journalLog.Date        |> should equal date3
+    journalLog.Ticker      |> should equal "X"
+    journalLog.Shares      |> should equal +150
+    journalLog.Amount      |> should equal -15450.00m
+    detail.Shares          |> should equal 150u
+    detail.Price           |> should equal 103.00m
 
     let recordsLog = elementLogs.[0].RecordsLog
-    recordsLog.Date      |> should equal date3
-    recordsLog.Ticker    |> should equal "X"
-    recordsLog.Count     |> should equal 3u
-    recordsLog.Hi        |> should equal 103.00m
-    recordsLog.Lo        |> should equal 102.00m
-    recordsLog.Close     |> should equal 102.50m
-    recordsLog.Dividend  |> should equal 0m
-    recordsLog.SplitNew  |> should equal 1u
-    recordsLog.SplitOld  |> should equal 1u
-    recordsLog.DeltaHi   |> should equal (1.00m / 102.00m)
-    recordsLog.DeltaLo   |> should equal (1.00m / 101.00m)
-    recordsLog.Shares    |> should equal 250u
-    recordsLog.ExitStop  |> should equal (Some 100.02m)
+    recordsLog.Date        |> should equal date3
+    recordsLog.Ticker      |> should equal "X"
+    recordsLog.Count       |> should equal 3u
+    recordsLog.Hi          |> should equal 103.00m
+    recordsLog.Lo          |> should equal 102.00m
+    recordsLog.Close       |> should equal 102.50m
+    recordsLog.Dividend    |> should equal 0m
+    recordsLog.SplitNew    |> should equal 1u
+    recordsLog.SplitOld    |> should equal 1u
+    recordsLog.DeltaHi     |> should equal (1.00m / 102.00m)
+    recordsLog.DeltaLo     |> should equal (1.00m / 101.00m)
+    recordsLog.Shares      |> should equal 250u
+    recordsLog.ExitStop    |> should equal (Some 100.02m)
 
-    summaryLog.Date      |> should equal date3
-    summaryLog.Cash      |> should equal  974350.00m
-    summaryLog.Equity    |> should equal  999975.00m
-    summaryLog.ExitValue |> should equal  999355.00m
-    summaryLog.Peak      |> should equal 1000000.00m
-    summaryLog.Drawdown  |> should equal -0.0006450m
-    summaryLog.Leverage  |> should equal (1m - (974350.00m / 999355.00m))
+    summaryLog.Date        |> should equal date3
+    summaryLog.Cash        |> should equal  974350.00m
+    summaryLog.Equity      |> should equal  999975.00m
+    summaryLog.ExitValue   |> should equal  999355.00m
+    summaryLog.Peak        |> should equal 1000000.00m
+    summaryLog.Drawdown    |> should equal -0.0006450m
+    summaryLog.Leverage    |> should equal (1m - (974350.00m / 999355.00m))
 
     let nextExitOrder = nextExitOrders.[0]
-    nextExitOrder.Ticker |> should equal "X"
-    nextExitOrder.Shares |> should equal 250u
-    nextExitOrder.Stop   |> should equal 100.03m
+    nextExitOrder.Ticker   |> should equal "X"
+    nextExitOrder.Shares   |> should equal 250u
+    nextExitOrder.Stop     |> should equal 100.03m
