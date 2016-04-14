@@ -9,17 +9,18 @@ open TrendFollowing.Processing
 //-------------------------------------------------------------------------------------------------
 
 let private unexpectedCall () = failwith "Unexpected call."
-let private unexpectedType () = failwith "Unexpected type."
 
-let private toExecuteTake = function | ExecuteTake detail -> detail | _ -> unexpectedType ()
-let private toExecuteExit = function | ExecuteExit detail -> detail | _ -> unexpectedType ()
-let private toLiquidation = function | Liquidation detail -> detail | _ -> unexpectedType ()
-let private (-->) journalLog f = f journalLog.Detail
+let private convertDetail journalLog (conversion : obj -> 'T) =
+    match journalLog.Detail with
+    | ExecuteTake detail -> detail |> conversion
+    | ExecuteExit detail -> detail |> conversion
+    | Liquidation detail -> detail |> conversion
 
-let private isExecuteTake = function ExecuteTake _ -> true | _ -> false
-let private isExecuteExit = function ExecuteExit _ -> true | _ -> false
-let private isLiquidation = function Liquidation _ -> true | _ -> false
-let private ifDetail f journalLog = f journalLog.Detail
+let private (-~>) journalLog (_ : 'T -> JournalDetail) =
+    convertDetail journalLog (fun x -> x :?> 'T)
+
+let private sieve (_ : 'T -> JournalDetail) journalLog =
+    convertDetail journalLog (fun x -> x :? 'T)
 
 let private toQuote ticker (date, hi, lo, close, dividend, splitNew, splitOld) : Quote =
 
@@ -66,9 +67,9 @@ let ``Baseline increment 1`` () =
     let state1 = date1 |> runIncrement model state0
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state1
 
-    let journalLogsExecuteTake = journalLogs |> Array.filter (ifDetail isExecuteTake)
-    let journalLogsExecuteExit = journalLogs |> Array.filter (ifDetail isExecuteExit)
-    let journalLogsLiquidation = journalLogs |> Array.filter (ifDetail isLiquidation)
+    let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
+    let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
+    let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
@@ -139,9 +140,9 @@ let ``Baseline increment 2`` () =
     let state2 = date2 |> runIncrement model state1
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
-    let journalLogsExecuteTake = journalLogs |> Array.filter (ifDetail isExecuteTake)
-    let journalLogsExecuteExit = journalLogs |> Array.filter (ifDetail isExecuteExit)
-    let journalLogsLiquidation = journalLogs |> Array.filter (ifDetail isLiquidation)
+    let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
+    let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
+    let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
@@ -535,9 +536,9 @@ let ``Process transactions, take position`` () =
     let state2 = date2 |> runIncrement model state1
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
-    let journalLogsExecuteTake = journalLogs |> Array.filter (ifDetail isExecuteTake)
-    let journalLogsExecuteExit = journalLogs |> Array.filter (ifDetail isExecuteExit)
-    let journalLogsLiquidation = journalLogs |> Array.filter (ifDetail isLiquidation)
+    let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
+    let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
+    let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
@@ -549,7 +550,7 @@ let ``Process transactions, take position`` () =
     nextExitOrders         |> Array.length |> should equal 1
 
     let journalLog = journalLogsExecuteTake.[0]
-    let detail = journalLog-->toExecuteTake
+    let detail = journalLog -~> ExecuteTake
     journalLog.Date      |> should equal date2
     journalLog.Ticker    |> should equal "X"
     journalLog.Shares    |> should equal +100
@@ -632,9 +633,9 @@ let ``Process transactions, take position and exit position on the same day`` ()
     let state2 = date2 |> runIncrement model state1
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
-    let journalLogsExecuteTake = journalLogs |> Array.filter (ifDetail isExecuteTake)
-    let journalLogsExecuteExit = journalLogs |> Array.filter (ifDetail isExecuteExit)
-    let journalLogsLiquidation = journalLogs |> Array.filter (ifDetail isLiquidation)
+    let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
+    let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
+    let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
@@ -646,7 +647,7 @@ let ``Process transactions, take position and exit position on the same day`` ()
     nextExitOrders         |> Array.length |> should equal 0
 
     let journalLog = journalLogsExecuteTake.[0]
-    let detail = journalLog-->toExecuteTake
+    let detail = journalLog -~> ExecuteTake
     journalLog.Date      |> should equal date2
     journalLog.Ticker    |> should equal "X"
     journalLog.Shares    |> should equal +100
@@ -655,7 +656,7 @@ let ``Process transactions, take position and exit position on the same day`` ()
     detail.Price         |> should equal 102.00m
 
     let journalLog = journalLogsExecuteExit.[0]
-    let detail = journalLog-->toExecuteExit
+    let detail = journalLog -~> ExecuteExit
     journalLog.Date      |> should equal date2
     journalLog.Ticker    |> should equal "X"
     journalLog.Shares    |> should equal -100
@@ -732,9 +733,9 @@ let ``Process transactions, take position order ignored for discontinued instrum
     let state2 = date2 |> runIncrement model state1
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
-    let journalLogsExecuteTake = journalLogs |> Array.filter (ifDetail isExecuteTake)
-    let journalLogsExecuteExit = journalLogs |> Array.filter (ifDetail isExecuteExit)
-    let journalLogsLiquidation = journalLogs |> Array.filter (ifDetail isLiquidation)
+    let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
+    let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
+    let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
@@ -796,9 +797,9 @@ let ``Process transactions, take position, exit position`` () =
     let state3 = date3 |> runIncrement model state2
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
-    let journalLogsExecuteTake = journalLogs |> Array.filter (ifDetail isExecuteTake)
-    let journalLogsExecuteExit = journalLogs |> Array.filter (ifDetail isExecuteExit)
-    let journalLogsLiquidation = journalLogs |> Array.filter (ifDetail isLiquidation)
+    let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
+    let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
+    let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
@@ -810,7 +811,7 @@ let ``Process transactions, take position, exit position`` () =
     nextExitOrders         |> Array.length |> should equal 0
 
     let journalLog = journalLogsExecuteExit.[0]
-    let detail = journalLog-->toExecuteExit
+    let detail = journalLog -~> ExecuteExit
     journalLog.Date      |> should equal date3
     journalLog.Ticker    |> should equal "X"
     journalLog.Shares    |> should equal -100
@@ -893,9 +894,9 @@ let ``Process transactions, take position, hold position`` () =
     let state3 = date3 |> runIncrement model state2
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
-    let journalLogsExecuteTake = journalLogs |> Array.filter (ifDetail isExecuteTake)
-    let journalLogsExecuteExit = journalLogs |> Array.filter (ifDetail isExecuteExit)
-    let journalLogsLiquidation = journalLogs |> Array.filter (ifDetail isLiquidation)
+    let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
+    let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
+    let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
@@ -984,9 +985,9 @@ let ``Process transactions, take position, liquidate position for discontinued i
     let state3 = date3 |> runIncrement model state2
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
-    let journalLogsExecuteTake = journalLogs |> Array.filter (ifDetail isExecuteTake)
-    let journalLogsExecuteExit = journalLogs |> Array.filter (ifDetail isExecuteExit)
-    let journalLogsLiquidation = journalLogs |> Array.filter (ifDetail isLiquidation)
+    let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
+    let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
+    let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
@@ -998,7 +999,7 @@ let ``Process transactions, take position, liquidate position for discontinued i
     nextExitOrders         |> Array.length |> should equal 0
 
     let journalLog = journalLogsLiquidation.[0]
-    let detail = journalLog-->toLiquidation
+    let detail = journalLog -~> Liquidation
     journalLog.Date      |> should equal date3
     journalLog.Ticker    |> should equal "X"
     journalLog.Shares    |> should equal -100
@@ -1067,9 +1068,9 @@ let ``Process transactions, take position, stack onto existing position`` () =
     let state3 = date3 |> runIncrement model state2
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
-    let journalLogsExecuteTake = journalLogs |> Array.filter (ifDetail isExecuteTake)
-    let journalLogsExecuteExit = journalLogs |> Array.filter (ifDetail isExecuteExit)
-    let journalLogsLiquidation = journalLogs |> Array.filter (ifDetail isLiquidation)
+    let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
+    let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
+    let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
@@ -1081,7 +1082,7 @@ let ``Process transactions, take position, stack onto existing position`` () =
     nextExitOrders         |> Array.length |> should equal 1
 
     let journalLog = journalLogsExecuteTake.[0]
-    let detail = journalLog-->toExecuteTake
+    let detail = journalLog -~> ExecuteTake
     journalLog.Date      |> should equal date3
     journalLog.Ticker    |> should equal "X"
     journalLog.Shares    |> should equal +150
