@@ -937,6 +937,86 @@ let ``Process transactions, take position, hold position`` () =
 //-------------------------------------------------------------------------------------------------
 
 [<Test>]
+let ``Process transactions, take position, liquidate position for discontinued instrument`` () =
+
+    let date1 = DateTime(2000, 01, 01)
+    let date2 = DateTime(2000, 01, 02)
+    let date3 = DateTime(2000, 01, 03)
+
+    let quotes =
+        [| date1, 101.00m, 100.00m, 100.50m, None, None, None
+           date2, 102.00m, 101.00m, 101.50m, None, None, None |]
+        |> Array.map (toQuote "X")
+
+    let getQuotes date =
+        quotes
+        |> Array.filter (fun x -> x.Date = date)
+
+    let computeTakeOrders elementLog (summaryLog : SummaryLog) : TakeOrder[] =
+        match summaryLog.Date with
+        | date when date = date1 -> [| { Ticker = "X"; Shares = 100u } |]
+        | _ -> Array.empty
+
+    let calculateExitStop elementLog =
+        match (elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date) with
+        | "X", date when date = date1 -> 100.01m
+        | "X", date when date = date2 -> 100.02m
+        | _ -> unexpectedCall ()
+
+    let model =
+        { GetQuotes         = getQuotes
+          ComputeMetricsLog = (fun _ _ -> ())
+          ComputeTakeOrders = computeTakeOrders
+          CalculateExitStop = calculateExitStop }
+
+    let summaryLog =
+        { Date      = DateTime.MinValue
+          Cash      = 1000000.00m
+          Equity    = 1000000.00m
+          ExitValue = 1000000.00m
+          Peak      = 1000000.00m
+          Drawdown  = 0m
+          Leverage  = 0m }
+
+    let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
+    let state1 = date1 |> runIncrement model state0
+    let state2 = date2 |> runIncrement model state1
+    let state3 = date3 |> runIncrement model state2
+    let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
+
+    let journalLogsExecuteTake = journalLogs |> Array.filter (ifDetail isExecuteTake)
+    let journalLogsExecuteExit = journalLogs |> Array.filter (ifDetail isExecuteExit)
+    let journalLogsLiquidation = journalLogs |> Array.filter (ifDetail isLiquidation)
+    let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
+    let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
+
+    journalLogsExecuteTake |> Array.length |> should equal 0
+    journalLogsExecuteExit |> Array.length |> should equal 0
+    journalLogsLiquidation |> Array.length |> should equal 1
+    elementLogs            |> Array.length |> should equal 0
+    nextTakeOrders         |> Array.length |> should equal 0
+    nextExitOrders         |> Array.length |> should equal 0
+
+    let journalLog = journalLogsLiquidation.[0]
+    let detail = journalLog-->toLiquidation
+    journalLog.Date      |> should equal date3
+    journalLog.Ticker    |> should equal "X"
+    journalLog.Shares    |> should equal -100
+    journalLog.Amount    |> should equal +10150.00m
+    detail.Shares        |> should equal 100u
+    detail.Price         |> should equal 101.50m
+
+    summaryLog.Date      |> should equal date3
+    summaryLog.Cash      |> should equal  999950.00m
+    summaryLog.Equity    |> should equal  999950.00m
+    summaryLog.ExitValue |> should equal  999950.00m
+    summaryLog.Peak      |> should equal 1000000.00m
+    summaryLog.Drawdown  |> should equal -0.0000500m
+    summaryLog.Leverage  |> should equal 0m
+
+//-------------------------------------------------------------------------------------------------
+
+[<Test>]
 let ``Process transactions, take position, stack onto existing position`` () =
 
     let date1 = DateTime(2000, 01, 01)
@@ -1036,83 +1116,3 @@ let ``Process transactions, take position, stack onto existing position`` () =
     nextExitOrder.Ticker |> should equal "X"
     nextExitOrder.Shares |> should equal 250u
     nextExitOrder.Stop   |> should equal 100.03m
-
-//-------------------------------------------------------------------------------------------------
-
-[<Test>]
-let ``Process transactions, take position, terminate position for discontinued instrument`` () =
-
-    let date1 = DateTime(2000, 01, 01)
-    let date2 = DateTime(2000, 01, 02)
-    let date3 = DateTime(2000, 01, 03)
-
-    let quotes =
-        [| date1, 101.00m, 100.00m, 100.50m, None, None, None
-           date2, 102.00m, 101.00m, 101.50m, None, None, None |]
-        |> Array.map (toQuote "X")
-
-    let getQuotes date =
-        quotes
-        |> Array.filter (fun x -> x.Date = date)
-
-    let computeTakeOrders elementLog (summaryLog : SummaryLog) : TakeOrder[] =
-        match summaryLog.Date with
-        | date when date = date1 -> [| { Ticker = "X"; Shares = 100u } |]
-        | _ -> Array.empty
-
-    let calculateExitStop elementLog =
-        match (elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date) with
-        | "X", date when date = date1 -> 100.01m
-        | "X", date when date = date2 -> 100.02m
-        | _ -> unexpectedCall ()
-
-    let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
-          ComputeTakeOrders = computeTakeOrders
-          CalculateExitStop = calculateExitStop }
-
-    let summaryLog =
-        { Date      = DateTime.MinValue
-          Cash      = 1000000.00m
-          Equity    = 1000000.00m
-          ExitValue = 1000000.00m
-          Peak      = 1000000.00m
-          Drawdown  = 0m
-          Leverage  = 0m }
-
-    let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
-    let state3 = date3 |> runIncrement model state2
-    let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
-
-    let journalLogsExecuteTake = journalLogs |> Array.filter (ifDetail isExecuteTake)
-    let journalLogsExecuteExit = journalLogs |> Array.filter (ifDetail isExecuteExit)
-    let journalLogsLiquidation = journalLogs |> Array.filter (ifDetail isLiquidation)
-    let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
-    let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
-
-    journalLogsExecuteTake |> Array.length |> should equal 0
-    journalLogsExecuteExit |> Array.length |> should equal 0
-    journalLogsLiquidation |> Array.length |> should equal 1
-    elementLogs            |> Array.length |> should equal 0
-    nextTakeOrders         |> Array.length |> should equal 0
-    nextExitOrders         |> Array.length |> should equal 0
-
-    let journalLog = journalLogsLiquidation.[0]
-    let detail = journalLog-->toLiquidation
-    journalLog.Date      |> should equal date3
-    journalLog.Ticker    |> should equal "X"
-    journalLog.Shares    |> should equal -100
-    journalLog.Amount    |> should equal +10150.00m
-    detail.Shares        |> should equal 100u
-    detail.Price         |> should equal 101.50m
-
-    summaryLog.Date      |> should equal date3
-    summaryLog.Cash      |> should equal  999950.00m
-    summaryLog.Equity    |> should equal  999950.00m
-    summaryLog.ExitValue |> should equal  999950.00m
-    summaryLog.Peak      |> should equal 1000000.00m
-    summaryLog.Drawdown  |> should equal -0.0000500m
-    summaryLog.Leverage  |> should equal 0m
