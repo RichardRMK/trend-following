@@ -56,10 +56,22 @@ type JournalLiquidation =
     { Shares     : uint32
       Price      : decimal }
 
+type JournalPayDividend =
+    { Shares     : uint32
+      Amount     : decimal }
+
+type JournalSplitShares =
+    { SharesNew  : uint32
+      SharesOld  : uint32
+      ExcessOld  : decimal
+      Price      : decimal }
+
 type JournalDetail =
     | ExecuteTake of JournalExecuteTake
     | ExecuteExit of JournalExecuteExit
     | Liquidation of JournalLiquidation
+    | PayDividend of JournalPayDividend
+    | SplitShares of JournalSplitShares
 
 type JournalLog =
     { Date       : DateTime

@@ -15,6 +15,8 @@ let private convertDetail journalLog (conversion : obj -> 'T) =
     | ExecuteTake detail -> detail |> conversion
     | ExecuteExit detail -> detail |> conversion
     | Liquidation detail -> detail |> conversion
+    | PayDividend detail -> detail |> conversion
+    | SplitShares detail -> detail |> conversion
 
 let private (-~>) journalLog (_ : 'T -> JournalDetail) =
     convertDetail journalLog (fun x -> x :?> 'T)
@@ -70,12 +72,16 @@ let ``Baseline increment 1`` () =
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
     let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
     let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
+    let journalLogsPayDividend = journalLogs |> Array.filter (sieve PayDividend)
+    let journalLogsSplitShares = journalLogs |> Array.filter (sieve SplitShares)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
     journalLogsExecuteTake |> Array.length |> should equal 0
     journalLogsExecuteExit |> Array.length |> should equal 0
     journalLogsLiquidation |> Array.length |> should equal 0
+    journalLogsPayDividend |> Array.length |> should equal 0
+    journalLogsSplitShares |> Array.length |> should equal 0
     elementLogs            |> Array.length |> should equal 1
     nextTakeOrders         |> Array.length |> should equal 0
     nextExitOrders         |> Array.length |> should equal 0
@@ -143,12 +149,16 @@ let ``Baseline increment 2`` () =
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
     let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
     let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
+    let journalLogsPayDividend = journalLogs |> Array.filter (sieve PayDividend)
+    let journalLogsSplitShares = journalLogs |> Array.filter (sieve SplitShares)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
     journalLogsExecuteTake |> Array.length |> should equal 0
     journalLogsExecuteExit |> Array.length |> should equal 0
     journalLogsLiquidation |> Array.length |> should equal 0
+    journalLogsPayDividend |> Array.length |> should equal 0
+    journalLogsSplitShares |> Array.length |> should equal 0
     elementLogs            |> Array.length |> should equal 1
     nextTakeOrders         |> Array.length |> should equal 0
     nextExitOrders         |> Array.length |> should equal 0
@@ -539,12 +549,16 @@ let ``Process transactions, take position`` () =
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
     let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
     let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
+    let journalLogsPayDividend = journalLogs |> Array.filter (sieve PayDividend)
+    let journalLogsSplitShares = journalLogs |> Array.filter (sieve SplitShares)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
     journalLogsExecuteTake |> Array.length |> should equal 1
     journalLogsExecuteExit |> Array.length |> should equal 0
     journalLogsLiquidation |> Array.length |> should equal 0
+    journalLogsPayDividend |> Array.length |> should equal 0
+    journalLogsSplitShares |> Array.length |> should equal 0
     elementLogs            |> Array.length |> should equal 1
     nextTakeOrders         |> Array.length |> should equal 0
     nextExitOrders         |> Array.length |> should equal 1
@@ -636,12 +650,16 @@ let ``Process transactions, take position and exit position on the same day`` ()
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
     let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
     let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
+    let journalLogsPayDividend = journalLogs |> Array.filter (sieve PayDividend)
+    let journalLogsSplitShares = journalLogs |> Array.filter (sieve SplitShares)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
     journalLogsExecuteTake |> Array.length |> should equal 1
     journalLogsExecuteExit |> Array.length |> should equal 1
     journalLogsLiquidation |> Array.length |> should equal 0
+    journalLogsPayDividend |> Array.length |> should equal 0
+    journalLogsSplitShares |> Array.length |> should equal 0
     elementLogs            |> Array.length |> should equal 1
     nextTakeOrders         |> Array.length |> should equal 0
     nextExitOrders         |> Array.length |> should equal 0
@@ -736,12 +754,16 @@ let ``Process transactions, take position order ignored for discontinued instrum
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
     let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
     let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
+    let journalLogsPayDividend = journalLogs |> Array.filter (sieve PayDividend)
+    let journalLogsSplitShares = journalLogs |> Array.filter (sieve SplitShares)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
     journalLogsExecuteTake |> Array.length |> should equal 0
     journalLogsExecuteExit |> Array.length |> should equal 0
     journalLogsLiquidation |> Array.length |> should equal 0
+    journalLogsPayDividend |> Array.length |> should equal 0
+    journalLogsSplitShares |> Array.length |> should equal 0
     elementLogs            |> Array.length |> should equal 0
     nextTakeOrders         |> Array.length |> should equal 0
     nextExitOrders         |> Array.length |> should equal 0
@@ -800,12 +822,16 @@ let ``Process transactions, take position, exit position`` () =
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
     let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
     let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
+    let journalLogsPayDividend = journalLogs |> Array.filter (sieve PayDividend)
+    let journalLogsSplitShares = journalLogs |> Array.filter (sieve SplitShares)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
     journalLogsExecuteTake |> Array.length |> should equal 0
     journalLogsExecuteExit |> Array.length |> should equal 1
     journalLogsLiquidation |> Array.length |> should equal 0
+    journalLogsPayDividend |> Array.length |> should equal 0
+    journalLogsSplitShares |> Array.length |> should equal 0
     elementLogs            |> Array.length |> should equal 1
     nextTakeOrders         |> Array.length |> should equal 0
     nextExitOrders         |> Array.length |> should equal 0
@@ -897,12 +923,16 @@ let ``Process transactions, take position, hold position`` () =
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
     let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
     let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
+    let journalLogsPayDividend = journalLogs |> Array.filter (sieve PayDividend)
+    let journalLogsSplitShares = journalLogs |> Array.filter (sieve SplitShares)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
     journalLogsExecuteTake |> Array.length |> should equal 0
     journalLogsExecuteExit |> Array.length |> should equal 0
     journalLogsLiquidation |> Array.length |> should equal 0
+    journalLogsPayDividend |> Array.length |> should equal 0
+    journalLogsSplitShares |> Array.length |> should equal 0
     elementLogs            |> Array.length |> should equal 1
     nextTakeOrders         |> Array.length |> should equal 0
     nextExitOrders         |> Array.length |> should equal 1
@@ -988,12 +1018,16 @@ let ``Process transactions, take position, liquidate position for discontinued i
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
     let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
     let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
+    let journalLogsPayDividend = journalLogs |> Array.filter (sieve PayDividend)
+    let journalLogsSplitShares = journalLogs |> Array.filter (sieve SplitShares)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
     journalLogsExecuteTake |> Array.length |> should equal 0
     journalLogsExecuteExit |> Array.length |> should equal 0
     journalLogsLiquidation |> Array.length |> should equal 1
+    journalLogsPayDividend |> Array.length |> should equal 0
+    journalLogsSplitShares |> Array.length |> should equal 0
     elementLogs            |> Array.length |> should equal 0
     nextTakeOrders         |> Array.length |> should equal 0
     nextExitOrders         |> Array.length |> should equal 0
@@ -1071,12 +1105,16 @@ let ``Process transactions, take position, stack onto existing position`` () =
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
     let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
     let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
+    let journalLogsPayDividend = journalLogs |> Array.filter (sieve PayDividend)
+    let journalLogsSplitShares = journalLogs |> Array.filter (sieve SplitShares)
     let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
     let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
 
     journalLogsExecuteTake |> Array.length |> should equal 1
     journalLogsExecuteExit |> Array.length |> should equal 0
     journalLogsLiquidation |> Array.length |> should equal 0
+    journalLogsPayDividend |> Array.length |> should equal 0
+    journalLogsSplitShares |> Array.length |> should equal 0
     elementLogs            |> Array.length |> should equal 1
     nextTakeOrders         |> Array.length |> should equal 0
     nextExitOrders         |> Array.length |> should equal 1
