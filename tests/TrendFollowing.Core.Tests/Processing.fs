@@ -38,7 +38,7 @@ let private toQuote ticker (date, hi, lo, close, dividend, splitNew, splitOld) :
 //-------------------------------------------------------------------------------------------------
 
 [<Test>]
-let ``Baseline increment 1`` () =
+let ``Baseline increment`` () =
 
     let date1 = DateTime(2000, 01, 01)
 
@@ -102,83 +102,6 @@ let ``Baseline increment 1`` () =
     recordsLog.ExitStop    |> should equal None
 
     summaryLog.Date        |> should equal date1
-    summaryLog.Cash        |> should equal 1000000.00m
-    summaryLog.Equity      |> should equal 1000000.00m
-    summaryLog.ExitValue   |> should equal 1000000.00m
-    summaryLog.Peak        |> should equal 1000000.00m
-    summaryLog.Drawdown    |> should equal 0m
-    summaryLog.Leverage    |> should equal 0m
-
-//-------------------------------------------------------------------------------------------------
-
-[<Test>]
-let ``Baseline increment 2`` () =
-
-    let date1 = DateTime(2000, 01, 01)
-    let date2 = DateTime(2000, 01, 02)
-
-    let quotes =
-        [| date1, 101.00m, 100.00m, 100.50m, None, None, None
-           date2, 102.00m, 101.00m, 101.50m, None, None, None |]
-        |> Array.map (toQuote "X")
-
-    let getQuotes date =
-        quotes
-        |> Array.filter (fun x -> x.Date = date)
-
-    let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
-          ComputeTakeOrders = (fun _ _ -> Array.empty)
-          CalculateExitStop = (fun _ -> unexpectedCall ()) }
-
-    let summaryLog =
-        { Date      = DateTime.MinValue
-          Cash      = 1000000.00m
-          Equity    = 1000000.00m
-          ExitValue = 1000000.00m
-          Peak      = 1000000.00m
-          Drawdown  = 0m
-          Leverage  = 0m }
-
-    let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
-    let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
-
-    let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
-    let journalLogsExecuteExit = journalLogs |> Array.filter (sieve ExecuteExit)
-    let journalLogsLiquidation = journalLogs |> Array.filter (sieve Liquidation)
-    let journalLogsPayDividend = journalLogs |> Array.filter (sieve PayDividend)
-    let journalLogsSplitShares = journalLogs |> Array.filter (sieve SplitShares)
-    let nextTakeOrders = nextOrders |> Array.choose chooseTakeOrder
-    let nextExitOrders = nextOrders |> Array.choose chooseExitOrder
-
-    journalLogsExecuteTake |> Array.length |> should equal 0
-    journalLogsExecuteExit |> Array.length |> should equal 0
-    journalLogsLiquidation |> Array.length |> should equal 0
-    journalLogsPayDividend |> Array.length |> should equal 0
-    journalLogsSplitShares |> Array.length |> should equal 0
-    elementLogs            |> Array.length |> should equal 1
-    nextTakeOrders         |> Array.length |> should equal 0
-    nextExitOrders         |> Array.length |> should equal 0
-
-    let recordsLog = elementLogs.[0].RecordsLog
-    recordsLog.Date        |> should equal date2
-    recordsLog.Ticker      |> should equal "X"
-    recordsLog.Count       |> should equal 2u
-    recordsLog.Hi          |> should equal 102.00m
-    recordsLog.Lo          |> should equal 101.00m
-    recordsLog.Close       |> should equal 101.50m
-    recordsLog.Dividend    |> should equal 0m
-    recordsLog.SplitNew    |> should equal 1u
-    recordsLog.SplitOld    |> should equal 1u
-    recordsLog.DeltaHi     |> should equal (1.00m / 101.00m)
-    recordsLog.DeltaLo     |> should equal (1.00m / 100.00m)
-    recordsLog.Shares      |> should equal 0u
-    recordsLog.ExitStop    |> should equal None
-
-    summaryLog.Date        |> should equal date2
     summaryLog.Cash        |> should equal 1000000.00m
     summaryLog.Equity      |> should equal 1000000.00m
     summaryLog.ExitValue   |> should equal 1000000.00m
