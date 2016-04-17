@@ -18,7 +18,7 @@ let private convertDetail journalLog (conversion : obj -> 'T) =
     | PayDividend detail -> detail |> conversion
     | SplitShares detail -> detail |> conversion
 
-let private (-~>) journalLog (_ : 'T -> JournalDetail) =
+let private (-->) journalLog (_ : 'T -> JournalDetail) =
     convertDetail journalLog (fun x -> x :?> 'T)
 
 let private sieve (_ : 'T -> JournalDetail) journalLog =
@@ -487,7 +487,7 @@ let ``Process transactions, take position`` () =
     nextExitOrders         |> Array.length |> should equal 1
 
     let journalLog = journalLogsExecuteTake.[0]
-    let detail = journalLog -~> ExecuteTake
+    let detail = journalLog --> ExecuteTake
     journalLog.Date        |> should equal date2
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal +100
@@ -588,7 +588,7 @@ let ``Process transactions, take position and exit position on the same day`` ()
     nextExitOrders         |> Array.length |> should equal 0
 
     let journalLog = journalLogsExecuteTake.[0]
-    let detail = journalLog -~> ExecuteTake
+    let detail = journalLog --> ExecuteTake
     journalLog.Date        |> should equal date2
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal +100
@@ -597,7 +597,7 @@ let ``Process transactions, take position and exit position on the same day`` ()
     detail.Price           |> should equal 102.00m
 
     let journalLog = journalLogsExecuteExit.[0]
-    let detail = journalLog -~> ExecuteExit
+    let detail = journalLog --> ExecuteExit
     journalLog.Date        |> should equal date2
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal -100
@@ -697,7 +697,7 @@ let ``Process transactions, take position and then exit position`` () =
     nextExitOrders         |> Array.length |> should equal 0
 
     let journalLog = journalLogsExecuteExit.[0]
-    let detail = journalLog -~> ExecuteExit
+    let detail = journalLog --> ExecuteExit
     journalLog.Date        |> should equal date3
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal -100
@@ -896,7 +896,7 @@ let ``Process transactions, take position and then stack onto existing position`
     nextExitOrders         |> Array.length |> should equal 1
 
     let journalLog = journalLogsExecuteTake.[0]
-    let detail = journalLog -~> ExecuteTake
+    let detail = journalLog --> ExecuteTake
     journalLog.Date        |> should equal date3
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal +150
@@ -1063,7 +1063,7 @@ let ``Process transactions, with discontinued quote, liquidate existing position
     nextExitOrders         |> Array.length |> should equal 0
 
     let journalLog = journalLogsLiquidation.[0]
-    let detail = journalLog -~> Liquidation
+    let detail = journalLog --> Liquidation
     journalLog.Date        |> should equal date3
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal -100
@@ -1149,7 +1149,7 @@ let ``Process transactions, with dividend 10%, existing position`` () =
     nextExitOrders         |> Array.length |> should equal 1
 
     let journalLog = journalLogsPayDividend.[0]
-    let detail = journalLog -~> PayDividend
+    let detail = journalLog --> PayDividend
     journalLog.Date        |> should equal date3
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal 0
@@ -1255,7 +1255,7 @@ let ``Process transactions, with dividend 10%, take position`` () =
     nextExitOrders         |> Array.length |> should equal 1
 
     let journalLog = journalLogsExecuteTake.[0]
-    let detail = journalLog -~> ExecuteTake
+    let detail = journalLog --> ExecuteTake
     journalLog.Date        |> should equal date3
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal +100
@@ -1361,7 +1361,7 @@ let ``Process transactions, with split 2:1, existing position`` () =
     nextExitOrders         |> Array.length |> should equal 1
 
     let journalLog = journalLogsSplitShares.[0]
-    let detail = journalLog -~> SplitShares
+    let detail = journalLog --> SplitShares
     journalLog.Date        |> should equal date3
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal +100
@@ -1469,7 +1469,7 @@ let ``Process transactions, with split 2:1, take position`` () =
     nextExitOrders         |> Array.length |> should equal 1
 
     let journalLog = journalLogsExecuteTake.[0]
-    let detail = journalLog -~> ExecuteTake
+    let detail = journalLog --> ExecuteTake
     journalLog.Date        |> should equal date3
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal +200
@@ -1575,7 +1575,7 @@ let ``Process transactions, with split 2:3, existing position`` () =
     nextExitOrders         |> Array.length |> should equal 1
 
     let journalLog = journalLogsSplitShares.[0]
-    let detail = journalLog -~> SplitShares
+    let detail = journalLog --> SplitShares
     journalLog.Date        |> should equal date3
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal -34
@@ -1683,7 +1683,7 @@ let ``Process transactions, with split 2:3, take position`` () =
     nextExitOrders         |> Array.length |> should equal 1
 
     let journalLog = journalLogsExecuteTake.[0]
-    let detail = journalLog -~> ExecuteTake
+    let detail = journalLog --> ExecuteTake
     journalLog.Date        |> should equal date3
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal +66
