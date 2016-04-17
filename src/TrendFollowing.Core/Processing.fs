@@ -186,9 +186,58 @@ let computeExitOrders model elementLogs (takeOrders : TakeOrder[]) =
 
 //-------------------------------------------------------------------------------------------------
 
+let private adjustShares splitNew splitOld shares =
+    shares
+    |> decimal
+    |> (*) (decimal splitNew / decimal splitOld)
+    |> uint32
+
+let private adjustStop dividend splitNew splitOld basis stop =
+    stop
+    |> (*) (1m - (dividend / basis))
+    |> (*) (decimal splitOld / decimal splitNew)
+
+let adjustOrder prevElementLog (order : Order) (quote : Quote) =
+
+    let dividend = computeOptional 0m quote.Dividend
+    let splitNew = computeOptional 1u quote.SplitNew
+    let splitOld = computeOptional 1u quote.SplitOld
+    let basis = prevElementLog.RecordsLog.Close
+
+    let adjustTakeOrder (order : TakeOrder) =
+        let shares = order.Shares |> adjustShares splitNew splitOld
+        { order with Shares = shares }
+
+    let adjustExitOrder (order : ExitOrder) =
+        let shares = order.Shares |> adjustShares splitNew splitOld
+        let stop   = order.Stop   |> adjustStop dividend splitNew splitOld basis
+        { order with Shares = shares; Stop = stop }
+
+    match order with
+    | Take order -> order |> adjustTakeOrder |> Take
+    | Exit order -> order |> adjustExitOrder |> Exit
+
+let adjustOrders prevElementLogs orders (quotes : Quote[]) =
+
+    let getTicker = function
+        | Take order -> order.Ticker
+        | Exit order -> order.Ticker
+
+    let chooseOrder order =
+        let ticker = getTicker order
+        let prevElementLog = prevElementLogs |> Array.find (fun x -> x.RecordsLog.Ticker = ticker)
+        quotes
+        |> Array.tryFind (fun quote -> quote.Ticker = ticker)
+        |> Option.map (adjustOrder prevElementLog order)
+
+    orders
+    |> Array.choose chooseOrder
+
+//-------------------------------------------------------------------------------------------------
+
 let processTransactionsExecuteTake (orders : Order[]) (quotes : Quote[]) =
 
-    let generateJournalLog (order : TakeOrder) (quote : Quote) : JournalLog =
+    let generateJournalLog (order : TakeOrder) (quote : Quote) =
 
         let detail : JournalExecuteTake =
             { Shares = order.Shares
@@ -207,12 +256,11 @@ let processTransactionsExecuteTake (orders : Order[]) (quotes : Quote[]) =
 
     orders
     |> Array.choose chooseTakeOrder
-    |> Array.map executeTransaction
-    |> Array.choose id
+    |> Array.choose executeTransaction
 
 let processTransactionsExecuteExit (orders : Order[]) (quotes : Quote[]) =
 
-    let generateJournalLog (order : ExitOrder) (quote : Quote) : JournalLog =
+    let generateJournalLog (order : ExitOrder) (quote : Quote) =
 
         let detail : JournalExecuteExit =
             { Shares = order.Shares
@@ -226,25 +274,17 @@ let processTransactionsExecuteExit (orders : Order[]) (quotes : Quote[]) =
 
     let executeTransaction (order : ExitOrder) =
         quotes
-        |> Array.tryFind (fun quote -> quote.Ticker = order.Ticker && quote.Lo <= order.Stop)
+        |> Array.tryFind (fun quote -> quote.Ticker = order.Ticker)
+        |> Option.filter (fun quote -> quote.Lo <= order.Stop)
         |> Option.map (generateJournalLog order)
 
     orders
     |> Array.choose chooseExitOrder
-    |> Array.map executeTransaction
-    |> Array.choose id
+    |> Array.choose executeTransaction
 
-let processTransactionsLiquidation date prevElementLogs (quotes : Quote[]) =
+let processTransactionsLiquidation prevElementLogs date (quotes : Quote[]) =
 
-    let wasDiscontinued prevElementLog =
-        quotes
-        |> Array.exists (fun quote -> quote.Ticker = prevElementLog.RecordsLog.Ticker)
-        |> not
-
-    let hadOpenPosition prevElementLog =
-        prevElementLog.RecordsLog.Shares <> 0u
-
-    let generateJournalLog prevElementLog : JournalLog =
+    let generateJournalLog prevElementLog =
 
         let detail : JournalLiquidation =
             { Shares = prevElementLog.RecordsLog.Shares
@@ -256,30 +296,106 @@ let processTransactionsLiquidation date prevElementLogs (quotes : Quote[]) =
           Cash   = detail.Shares |> (decimal) |> (*) detail.Price
           Detail = Liquidation detail }
 
+    let wasDiscontinued prevElementLog =
+        quotes
+        |> Array.exists (fun quote -> quote.Ticker = prevElementLog.RecordsLog.Ticker)
+        |> not
+
+    let hadOpenPosition prevElementLog =
+        prevElementLog.RecordsLog.Shares <> 0u
+
     prevElementLogs
     |> Array.filter wasDiscontinued
     |> Array.filter hadOpenPosition
     |> Array.map generateJournalLog
+
+let processTransactionsPayDividend prevElementLogs (quotes : Quote[]) =
+
+    let generateJournalLog prevElementLog (quote : Quote) =
+
+        let dividend = computeOptional 0m quote.Dividend
+
+        let detail : JournalPayDividend =
+            { Shares = prevElementLog.RecordsLog.Shares
+              Amount = dividend }
+
+        { Date   = quote.Date
+          Ticker = prevElementLog.RecordsLog.Ticker
+          Shares = 0
+          Cash   = detail.Shares |> (decimal) |> (*) detail.Amount
+          Detail = PayDividend detail }
+
+    let executeTransaction prevElementLog =
+        quotes
+        |> Array.tryFind (fun quote -> quote.Ticker = prevElementLog.RecordsLog.Ticker)
+        |> Option.filter (fun quote -> prevElementLog.RecordsLog.Shares <> 0u)
+        |> Option.filter (fun quote -> quote.Dividend.IsSome)
+        |> Option.map (generateJournalLog prevElementLog)
+
+    prevElementLogs
+    |> Array.choose executeTransaction
+
+let processTransactionsSplitShares prevElementLogs (quotes : Quote[]) =
+
+    let generateJournalLog prevElementLog (quote : Quote) =
+
+        let splitNew = computeOptional 1u quote.SplitNew
+        let splitOld = computeOptional 1u quote.SplitOld
+
+        let sharesOld = prevElementLog.RecordsLog.Shares
+        let sharesNew = (decimal sharesOld) * (decimal splitNew / decimal splitOld) |> uint32
+        let excessOld = (decimal sharesOld) - (decimal splitOld / decimal splitNew) * (decimal sharesNew)
+
+        let detail : JournalSplitShares =
+            { SharesNew  = sharesNew
+              SharesOld  = sharesOld
+              ExcessOld  = excessOld
+              Price      = prevElementLog.RecordsLog.Close }
+
+        { Date   = quote.Date
+          Ticker = prevElementLog.RecordsLog.Ticker
+          Shares = int detail.SharesNew - int detail.SharesOld
+          Cash   = detail.ExcessOld * detail.Price
+          Detail = SplitShares detail }
+
+    let executeTransaction prevElementLog =
+        quotes
+        |> Array.tryFind (fun quote -> quote.Ticker = prevElementLog.RecordsLog.Ticker)
+        |> Option.filter (fun quote -> prevElementLog.RecordsLog.Shares <> 0u)
+        |> Option.filter (fun quote -> quote.SplitNew.IsSome || quote.SplitOld.IsSome)
+        |> Option.map (generateJournalLog prevElementLog)
+
+    prevElementLogs
+    |> Array.choose executeTransaction
 
 //-------------------------------------------------------------------------------------------------
 
 let runIncrement model (_, prevElementLogs, prevSummaryLog, orders) date =
 
     let quotes = model.GetQuotes date
+    let orders = adjustOrders prevElementLogs orders quotes
 
     let journalLogsExecuteTake = quotes |> processTransactionsExecuteTake orders
     let journalLogsExecuteExit = quotes |> processTransactionsExecuteExit orders
-    let journalLogsLiquidation = quotes |> processTransactionsLiquidation date prevElementLogs
-    let journalLogs =
-        Array.concat [ journalLogsExecuteTake; journalLogsExecuteExit; journalLogsLiquidation ]
+    let journalLogsLiquidation = quotes |> processTransactionsLiquidation prevElementLogs date
+    let journalLogsPayDividend = quotes |> processTransactionsPayDividend prevElementLogs
+    let journalLogsSplitShares = quotes |> processTransactionsSplitShares prevElementLogs
 
+    let journalLogs =
+        [ journalLogsExecuteTake
+          journalLogsExecuteExit
+          journalLogsLiquidation
+          journalLogsPayDividend
+          journalLogsSplitShares ]
+
+    let journalLogs = journalLogs |> Array.concat
     let elementLogs = quotes |> Array.map (computeElementLog model orders journalLogs prevElementLogs)
     let summaryLog = computeSummaryLog date journalLogs elementLogs prevSummaryLog
 
     let takeOrders = computeTakeOrders model elementLogs summaryLog
     let exitOrders = computeExitOrders model elementLogs takeOrders
-    let nextOrders =
-        Array.concat [ Array.map Take takeOrders; Array.map Exit exitOrders ]
+    let nextOrders = [ Array.map Take takeOrders; Array.map Exit exitOrders ]
+    let nextOrders = nextOrders |> Array.concat
 
     (journalLogs, elementLogs, summaryLog, nextOrders)
 
