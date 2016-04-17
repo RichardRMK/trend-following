@@ -16,10 +16,29 @@ let private computeOptional placeholder = function
     | None -> placeholder
     | Some value -> value
 
-let private computeDelta dividend splitNew splitOld basis next prev =
-    prev
+let private computeAdjustedAmount splitNew splitOld dividend basis amount =
+    amount
     |> (*) (1m - (dividend / basis))
     |> (*) (decimal splitOld / decimal splitNew)
+
+let private computeAdjustedShares splitNew splitOld shares =
+    shares
+    |> decimal
+    |> (*) (decimal splitNew / decimal splitOld)
+    |> uint32
+
+let private computeAdjustedExcess splitNew splitOld shares =
+    shares
+    |> computeAdjustedShares splitNew splitOld
+    |> decimal
+    |> (*) (decimal splitOld / decimal splitNew)
+    |> (-) (decimal shares)
+
+//-------------------------------------------------------------------------------------------------
+
+let private computeDelta splitNew splitOld dividend basis next prev =
+    prev
+    |> computeAdjustedAmount splitNew splitOld dividend basis
     |> (/) next
     |> (+) -1m
 
@@ -65,7 +84,7 @@ let private computeRecordsLogNext (quote : Quote) exitOrder journalLogs prevReco
     let splitNew = computeOptional 1u quote.SplitNew
     let splitOld = computeOptional 1u quote.SplitOld
 
-    let computeDelta = prevRecordsLog.Close |> computeDelta dividend splitNew splitOld
+    let computeDelta = prevRecordsLog.Close |> computeDelta splitNew splitOld dividend
     let deltaHi = computeDelta quote.Hi prevRecordsLog.Hi
     let deltaLo = computeDelta quote.Lo prevRecordsLog.Lo
 
@@ -186,17 +205,6 @@ let computeExitOrders model elementLogs (takeOrders : TakeOrder[]) =
 
 //-------------------------------------------------------------------------------------------------
 
-let private adjustShares splitNew splitOld shares =
-    shares
-    |> decimal
-    |> (*) (decimal splitNew / decimal splitOld)
-    |> uint32
-
-let private adjustStop dividend splitNew splitOld basis stop =
-    stop
-    |> (*) (1m - (dividend / basis))
-    |> (*) (decimal splitOld / decimal splitNew)
-
 let adjustOrder prevElementLog (order : Order) (quote : Quote) =
 
     let dividend = computeOptional 0m quote.Dividend
@@ -205,12 +213,12 @@ let adjustOrder prevElementLog (order : Order) (quote : Quote) =
     let basis = prevElementLog.RecordsLog.Close
 
     let adjustTakeOrder (order : TakeOrder) =
-        let shares = order.Shares |> adjustShares splitNew splitOld
+        let shares = order.Shares |> computeAdjustedShares splitNew splitOld
         { order with Shares = shares }
 
     let adjustExitOrder (order : ExitOrder) =
-        let shares = order.Shares |> adjustShares splitNew splitOld
-        let stop   = order.Stop   |> adjustStop dividend splitNew splitOld basis
+        let shares = order.Shares |> computeAdjustedShares splitNew splitOld
+        let stop   = order.Stop   |> computeAdjustedAmount splitNew splitOld dividend basis
         { order with Shares = shares; Stop = stop }
 
     match order with
@@ -343,8 +351,8 @@ let processTransactionsSplitShares prevElementLogs (quotes : Quote[]) =
         let splitOld = computeOptional 1u quote.SplitOld
 
         let sharesOld = prevElementLog.RecordsLog.Shares
-        let sharesNew = (decimal sharesOld) * (decimal splitNew / decimal splitOld) |> uint32
-        let excessOld = (decimal sharesOld) - (decimal splitOld / decimal splitNew) * (decimal sharesNew)
+        let sharesNew = sharesOld |> computeAdjustedShares splitNew splitOld
+        let excessOld = sharesOld |> computeAdjustedExcess splitNew splitOld
 
         let detail : JournalSplitShares =
             { SharesNew  = sharesNew
