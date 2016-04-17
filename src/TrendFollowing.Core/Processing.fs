@@ -205,7 +205,7 @@ let computeExitOrders model elementLogs (takeOrders : TakeOrder[]) =
 
 //-------------------------------------------------------------------------------------------------
 
-let adjustOrder prevElementLog (order : Order) (quote : Quote) =
+let adjustOrder prevElementLog order (quote : Quote) =
 
     let dividend = computeOptional 0m quote.Dividend
     let splitNew = computeOptional 1u quote.SplitNew
@@ -243,7 +243,7 @@ let adjustOrders prevElementLogs orders (quotes : Quote[]) =
 
 //-------------------------------------------------------------------------------------------------
 
-let processTransactionsExecuteTake (orders : Order[]) (quotes : Quote[]) =
+let processTransactionsExecuteTake orders (quotes : Quote[]) =
 
     let generateJournalLog (order : TakeOrder) (quote : Quote) =
 
@@ -266,7 +266,7 @@ let processTransactionsExecuteTake (orders : Order[]) (quotes : Quote[]) =
     |> Array.choose chooseTakeOrder
     |> Array.choose executeTransaction
 
-let processTransactionsExecuteExit (orders : Order[]) (quotes : Quote[]) =
+let processTransactionsExecuteExit orders (quotes : Quote[]) =
 
     let generateJournalLog (order : ExitOrder) (quote : Quote) =
 
