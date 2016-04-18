@@ -63,7 +63,8 @@ let computeMetrics (metrics : Metric list) (quote : Quote) =
                     sarEp, sarAf, Neg, sar
                 else
                     let sarEp = max metrics.Head.SarEp quote.Hi
-                    let sarAf = min paramSarAfMax (metrics.Head.SarAf + paramSarAfInc)
+                    let incAf = if quote.Hi > metrics.Head.SarEp then paramSarAfInc else 0m
+                    let sarAf = min paramSarAfMax (metrics.Head.SarAf + incAf)
                     let sar = metrics.Head.Sar + (sarAf * (sarEp - metrics.Head.Sar))
                     sarEp, sarAf, Pos, sar
             | Neg
@@ -75,7 +76,8 @@ let computeMetrics (metrics : Metric list) (quote : Quote) =
                     sarEp, sarAf, Pos, sar
                 else
                     let sarEp = min metrics.Head.SarEp quote.Lo
-                    let sarAf = min paramSarAfMax (metrics.Head.SarAf + paramSarAfInc)
+                    let incAf = if quote.Lo < metrics.Head.SarEp then paramSarAfInc else 0m
+                    let sarAf = min paramSarAfMax (metrics.Head.SarAf + incAf)
                     let sar = metrics.Head.Sar + (sarAf * (sarEp - metrics.Head.Sar))
                     sarEp, sarAf, Neg, sar
 

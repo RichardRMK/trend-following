@@ -58,9 +58,13 @@ let computeMetricSarAf (metrics : Metric list) (quote : Quote) =
     else
         match metrics.Head.SarDirection with
         | Pos when quote.Lo <= metrics.Head.Sar -> paramSarAfInc
-        | Pos -> min paramSarAfMax (metrics.Head.SarAf + paramSarAfInc)
+        | Pos ->
+            let incAf = if quote.Hi > metrics.Head.SarEp then paramSarAfInc else 0m
+            min paramSarAfMax (metrics.Head.SarAf + incAf)
         | Neg when quote.Hi >= metrics.Head.Sar -> paramSarAfInc
-        | Neg -> min paramSarAfMax (metrics.Head.SarAf + paramSarAfInc)
+        | Neg ->
+            let incAf = if quote.Lo < metrics.Head.SarEp then paramSarAfInc else 0m
+            min paramSarAfMax (metrics.Head.SarAf + incAf)
 
 let computeMetricSarDirection (metrics : Metric list) (quote : Quote) =
     let length = List.length metrics
