@@ -97,16 +97,16 @@ let computeMetricSarDirection (metrics : Metric list) (quote : Quote) =
         | Neg when quote.Hi >= metrics.Head.Sar -> Pos
         | Neg -> Neg
 
-let computeMetricSar (metrics : Metric list) (quote : Quote) sarEp sarAf =
+let computeMetricSar (metrics : Metric list) (quote : Quote) =
     let length = List.length metrics
     if (length = 0) then
         quote.Hi
     else
         match metrics.Head.SarDirection with
         | Pos when quote.Lo <= metrics.Head.Sar -> metrics.Head.SarEp
-        | Pos -> metrics.Head.Sar + (sarAf * (sarEp - metrics.Head.Sar))
+        | Pos -> metrics.Head.Sar + (metrics.Head.SarAf * (metrics.Head.SarEp - metrics.Head.Sar))
         | Neg when quote.Hi >= metrics.Head.Sar -> metrics.Head.SarEp
-        | Neg -> metrics.Head.Sar + (sarAf * (sarEp - metrics.Head.Sar))
+        | Neg -> metrics.Head.Sar + (metrics.Head.SarAf * (metrics.Head.SarEp - metrics.Head.Sar))
 
 let computeMetricIsTrending1 (metrics : Metric list) (quote : Quote) =
     let length = List.length metrics
@@ -214,7 +214,7 @@ let computeMetrics (metrics : Metric list) (quote : Quote) =
     let sarEp = computeMetricSarEp metrics quote
     let sarAf = computeMetricSarAf metrics quote
     let sarDirection = computeMetricSarDirection metrics quote
-    let sar = computeMetricSar metrics quote sarEp sarAf
+    let sar = computeMetricSar metrics quote
     let isTrending1 = computeMetricIsTrending1 metrics quote
     let isTrending2 = computeMetricIsTrending2 sarDirection
     let isTrending = computeMetricIsTrending isTrending1 isTrending2
