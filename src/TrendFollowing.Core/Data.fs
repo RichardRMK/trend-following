@@ -15,11 +15,11 @@ let private configFile = @"..\..\private\App.config"
 //-------------------------------------------------------------------------------------------------
 
 [<Literal>]
-let private sqlGetQuotesByDate = @"..\..\sql\GetQuotesByDate.sql"
+let private sqlGetQuotes = @"..\..\sql\GetQuotes.sql"
 
-type private GetQuotesByDateCommandProvider = SqlCommandProvider<sqlGetQuotesByDate, connectionName, ConfigFile = configFile>
+type private GetQuotesCommandProvider = SqlCommandProvider<sqlGetQuotes, connectionName, ConfigFile = configFile>
 
-let private toQuote (record : GetQuotesByDateCommandProvider.Record) : Quote =
+let private toQuote (record : GetQuotesCommandProvider.Record) : Quote =
 
     { Date     = record.Date
       Ticker   = record.Ticker
@@ -31,7 +31,7 @@ let private toQuote (record : GetQuotesByDateCommandProvider.Record) : Quote =
       SplitOld = None }
 
 let getQuotes date =
-    use command = new GetQuotesByDateCommandProvider()
+    use command = new GetQuotesCommandProvider()
     let records = command.Execute(date)
     records
     |> Seq.map toQuote

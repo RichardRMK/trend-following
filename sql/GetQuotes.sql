@@ -1,12 +1,13 @@
 ﻿select
-    [Date]  as [Date],
-    [Open]  as [Open],
-    [High]  as [Hi],
-    [Low]   as [Lo],
-    [Close] as [Close]
+    [Date]   as [Date],
+    [Ticker] as [Ticker],
+    [High]   as [Hi],
+    [Low]    as [Lo],
+    [Close]  as [Close]
 from
     [Quote] quote inner join [Issue] issue on quote.IssueId = issue.IssueId
 where
-    issue.ticker = @ticker
+    quote.[Date] = @date
+    and issue.Ticker in ('BRK.A')
 order by
-    quote.[Date] asc
+    issue.Ticker asc

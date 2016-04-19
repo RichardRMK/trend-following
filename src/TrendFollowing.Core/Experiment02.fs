@@ -1,4 +1,4 @@
-﻿module TrendFollowing.Example03
+﻿module TrendFollowing.Experiment02
 
 open System
 open TrendFollowing.Types
@@ -8,55 +8,52 @@ open TrendFollowing.Output
 
 let private paramRisk = 0.1m
 let private paramWait = 200u
-let private paramSarAfInc = 0.002m
-let private paramSarAfMax = 0.020m
+let private paramRes = 200
+let private paramSup = 50
 
 //-------------------------------------------------------------------------------------------------
 
-type TrendDirection = Pos | Neg
-
 type MetricsLog =
-    { SarEp    : decimal
-      SarAf    : decimal
-      Sar      : decimal
-      Trending : TrendDirection }
+    { ResLookback : decimal[]
+      SupLookback : decimal[]
+      Res         : decimal
+      Sup         : decimal
+      Trending    : bool }
 
 let private computeMetricsLogInit (recordsLog : RecordsLog) =
 
-    { SarEp    = recordsLog.Lo
-      SarAf    = paramSarAfInc
-      Sar      = recordsLog.Hi
-      Trending = Neg }
+    { ResLookback = Array.create paramRes recordsLog.Hi
+      SupLookback = Array.create paramSup recordsLog.Lo
+      Res         = recordsLog.Hi
+      Sup         = recordsLog.Lo
+      Trending    = false }
 
 let private computeMetricsLogNext (recordsLog : RecordsLog) (prevMetricsLog : MetricsLog) =
 
-    match prevMetricsLog.Trending with
-    | Pos when recordsLog.Lo <= prevMetricsLog.Sar
-        ->
-        { SarEp    = recordsLog.Lo
-          SarAf    = paramSarAfInc
-          Sar      = prevMetricsLog.SarEp
-          Trending = Neg }
-    | Neg when recordsLog.Hi >= prevMetricsLog.Sar
-        ->
-        { SarEp    = recordsLog.Hi
-          SarAf    = paramSarAfInc
-          Sar      = prevMetricsLog.SarEp
-          Trending = Pos }
-    | Pos
-        ->
-        let incAf = if recordsLog.Hi > prevMetricsLog.SarEp then paramSarAfInc else 0m
-        { SarEp    = max recordsLog.Hi prevMetricsLog.SarEp
-          SarAf    = min paramSarAfMax (prevMetricsLog.SarAf + incAf)
-          Sar      = prevMetricsLog.Sar + (prevMetricsLog.SarAf * (prevMetricsLog.SarEp - prevMetricsLog.Sar))
-          Trending = Pos }
-    | Neg
-        ->
-        let incAf = if recordsLog.Lo < prevMetricsLog.SarEp then paramSarAfInc else 0m
-        { SarEp    = min recordsLog.Lo prevMetricsLog.SarEp
-          SarAf    = min paramSarAfMax (prevMetricsLog.SarAf + incAf)
-          Sar      = prevMetricsLog.Sar + (prevMetricsLog.SarAf * (prevMetricsLog.SarEp - prevMetricsLog.Sar))
-          Trending = Neg }
+    let resLookback =
+        prevMetricsLog.ResLookback
+        |> Array.append [| recordsLog.Hi |]
+        |> Array.take paramRes
+
+    let supLookback =
+        prevMetricsLog.SupLookback
+        |> Array.append [| recordsLog.Lo |]
+        |> Array.take paramSup
+
+    let res = resLookback |> Array.max
+    let sup = supLookback |> Array.min
+
+    let trending =
+        match prevMetricsLog with
+        | prevMetricsLog when recordsLog.Hi >= prevMetricsLog.Res -> true
+        | prevMetricsLog when recordsLog.Lo <= prevMetricsLog.Sup -> false
+        | prevMetricsLog -> prevMetricsLog.Trending
+
+    { ResLookback = resLookback
+      SupLookback = supLookback
+      Res         = res
+      Sup         = sup
+      Trending    = trending }
 
 let computeMetricsLog (recordsLog : RecordsLog) = function
     | None      -> computeMetricsLogInit recordsLog
@@ -68,9 +65,9 @@ let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : Sum
 
     let computeOrder elementLog : TakeOrder =
 
-        let sarEp = elementLog.MetricsLog.SarEp
-        let sar = elementLog.MetricsLog.Sar
-        let shares = (summaryLog.ExitValue * paramRisk) / (sarEp - sar)
+        let res = elementLog.MetricsLog.Res
+        let sup = elementLog.MetricsLog.Sup
+        let shares = (summaryLog.ExitValue * paramRisk) / (res - sup)
 
         { Ticker = elementLog.RecordsLog.Ticker
           Shares = uint32 shares }
@@ -78,12 +75,12 @@ let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : Sum
     elementLogs
     |> Array.filter (fun x -> x.RecordsLog.Count >= paramWait)
     |> Array.filter (fun x -> x.RecordsLog.Shares = 0u)
-    |> Array.filter (fun x -> x.MetricsLog.Trending = Pos)
+    |> Array.filter (fun x -> x.MetricsLog.Trending)
     |> Array.map computeOrder
 
 let calculateExitStop (elementLog : ElementLog<MetricsLog>) : decimal =
 
-    elementLog.MetricsLog.Sar
+    elementLog.MetricsLog.Sup
 
 //-------------------------------------------------------------------------------------------------
 
