@@ -1,4 +1,4 @@
-﻿module TrendFollowing.Example
+﻿module TrendFollowing.Example01
 
 open System
 open TrendFollowing.Types
