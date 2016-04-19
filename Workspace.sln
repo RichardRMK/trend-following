@@ -6,7 +6,6 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sql", "sql", "{2000EDEE-A211-490F-85F6-749F279BEC1B}"
 	ProjectSection(SolutionItems) = preProject
 		sql\GetHolidays.sql = sql\GetHolidays.sql
-		sql\GetQuotes.sql = sql\GetQuotes.sql
 		sql\GetQuotesByDate.sql = sql\GetQuotesByDate.sql
 	EndProjectSection
 EndProject

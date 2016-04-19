@@ -64,19 +64,9 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <None Include="App.config" />
-    <Content Include="packages.config" />
-    <Compile Include="Data.fs" />
-    <Compile Include="Experiment01.fs" />
-    <Compile Include="Experiment02.fs" />
-    <Compile Include="Experiment03.fs" />
-    <Compile Include="Experiment04.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FSharp.Data.SqlClient">
-      <HintPath>..\..\packages\FSharp.Data.SqlClient.1.8.1\lib\net40\FSharp.Data.SqlClient.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
