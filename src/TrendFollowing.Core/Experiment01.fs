@@ -17,13 +17,13 @@ let private computeMetricsLogInit (recordsLog : RecordsLog) =
       Sup      = recordsLog.Lo
       Trending = false }
 
-let private computeMetricsLogNext (recordsLog : RecordsLog) (prevMetricsLog : MetricsLog) =
+let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : ElementLog<MetricsLog>) =
 
-    let res = max prevMetricsLog.Res recordsLog.Hi
-    let sup = min prevMetricsLog.Sup recordsLog.Lo
+    let res = max prevElementLog.MetricsLog.Res recordsLog.Hi
+    let sup = min prevElementLog.MetricsLog.Sup recordsLog.Lo
 
     let trending =
-        match prevMetricsLog with
+        match prevElementLog.MetricsLog with
         | prevMetricsLog when recordsLog.Lo <= prevMetricsLog.Sup -> false
         | prevMetricsLog when recordsLog.Hi >= prevMetricsLog.Res -> true
         | prevMetricsLog -> prevMetricsLog.Trending

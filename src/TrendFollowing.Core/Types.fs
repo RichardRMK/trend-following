@@ -99,7 +99,7 @@ type Order =
 
 type Model<'T> =
     { GetQuotes         : DateTime -> Quote[]
-      ComputeMetricsLog : RecordsLog -> 'T option -> 'T
+      ComputeMetricsLog : RecordsLog -> ElementLog<'T> option -> 'T
       ComputeTakeOrders : ElementLog<'T>[] -> SummaryLog -> TakeOrder[]
       CalculateExitStop : ElementLog<'T> -> decimal }
 

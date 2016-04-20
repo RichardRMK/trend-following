@@ -28,15 +28,15 @@ let private computeMetricsLogInit (recordsLog : RecordsLog) =
       Sup         = recordsLog.Lo
       Trending    = false }
 
-let private computeMetricsLogNext (recordsLog : RecordsLog) (prevMetricsLog : MetricsLog) =
+let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : ElementLog<MetricsLog>) =
 
     let resLookback =
-        prevMetricsLog.ResLookback
+        prevElementLog.MetricsLog.ResLookback
         |> Array.append [| recordsLog.Hi |]
         |> Array.take paramRes
 
     let supLookback =
-        prevMetricsLog.SupLookback
+        prevElementLog.MetricsLog.SupLookback
         |> Array.append [| recordsLog.Lo |]
         |> Array.take paramSup
 
@@ -44,7 +44,7 @@ let private computeMetricsLogNext (recordsLog : RecordsLog) (prevMetricsLog : Me
     let sup = supLookback |> Array.min
 
     let trending =
-        match prevMetricsLog with
+        match prevElementLog.MetricsLog with
         | prevMetricsLog when recordsLog.Hi >= prevMetricsLog.Res -> true
         | prevMetricsLog when recordsLog.Lo <= prevMetricsLog.Sup -> false
         | prevMetricsLog -> prevMetricsLog.Trending

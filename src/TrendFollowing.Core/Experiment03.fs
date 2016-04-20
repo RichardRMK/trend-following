@@ -28,7 +28,9 @@ let private computeMetricsLogInit (recordsLog : RecordsLog) =
       Sar      = recordsLog.Hi
       Trending = Neg }
 
-let private computeMetricsLogNext (recordsLog : RecordsLog) (prevMetricsLog : MetricsLog) =
+let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : ElementLog<MetricsLog>) =
+
+    let prevMetricsLog = prevElementLog.MetricsLog
 
     match prevMetricsLog.Trending with
     | Pos when recordsLog.Lo <= prevMetricsLog.Sar

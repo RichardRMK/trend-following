@@ -133,7 +133,6 @@ let computeElementLog model orders (journalLogs : JournalLog[]) prevElementLogs 
 
     let metricsLog =
         prevElementLog
-        |> Option.map (fun x -> x.MetricsLog)
         |> model.ComputeMetricsLog recordsLog
 
     { RecordsLog = recordsLog
