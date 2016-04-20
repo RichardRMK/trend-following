@@ -26,9 +26,9 @@ let private toQuote (record : GetQuotesCommandProvider.Record) : Quote =
       Hi       = record.Hi
       Lo       = record.Lo
       Close    = record.Close
-      Dividend = None
-      SplitNew = None
-      SplitOld = None }
+      Dividend = record.Dividend
+      SplitNew = record.SplitNew |> Option.map uint32
+      SplitOld = record.SplitOld |> Option.map uint32 }
 
 let getQuotes date =
     use command = new GetQuotesCommandProvider()

@@ -1,13 +1,19 @@
 ﻿select
-    [Date]   as [Date],
-    [Ticker] as [Ticker],
-    [High]   as [Hi],
-    [Low]    as [Lo],
-    [Close]  as [Close]
+    quote.[Date]   as [Date],
+    issue.[Ticker] as [Ticker],
+    quote.[High]   as [Hi],
+    quote.[Low]    as [Lo],
+    quote.[Close]  as [Close],
+    divid.[Amount] as [Dividend],
+    split.[New]    as [SplitNew],
+    split.[Old]    as [SplitOld]
 from
-    [Quote] quote inner join [Issue] issue on quote.IssueId = issue.IssueId
+    [Quote] quote
+    left  join [Divid] divid on quote.[IssueId] = divid.[IssueId] and quote.[Date] = divid.[Date]
+    left  join [Split] split on quote.[IssueId] = split.[IssueId] and quote.[Date] = split.[Date]
+    inner join [Issue] issue on quote.[IssueId] = issue.[IssueId]
 where
     quote.[Date] = @date
-    and issue.Ticker in ('BRK.A')
+    and issue.[Ticker] in ('MSFT')
 order by
-    issue.Ticker asc
+    issue.[Ticker] asc
