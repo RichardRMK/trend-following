@@ -30,13 +30,18 @@ let private computeMetricsLogInit (recordsLog : RecordsLog) =
 
 let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : ElementLog<MetricsLog>) =
 
+    let computeAdjustedAmount =
+        Metrics.computeAdjustedAmount recordsLog prevElementLog
+
     let resLookback =
         prevElementLog.MetricsLog.ResLookback
+        |> Array.map computeAdjustedAmount
         |> Array.append [| recordsLog.Hi |]
         |> Array.take paramRes
 
     let supLookback =
         prevElementLog.MetricsLog.SupLookback
+        |> Array.map computeAdjustedAmount
         |> Array.append [| recordsLog.Lo |]
         |> Array.take paramSup
 
@@ -45,8 +50,8 @@ let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : El
 
     let trending =
         match prevElementLog.MetricsLog with
-        | prevMetricsLog when recordsLog.Hi >= prevMetricsLog.Res -> true
-        | prevMetricsLog when recordsLog.Lo <= prevMetricsLog.Sup -> false
+        | prevMetricsLog when recordsLog.Hi >= computeAdjustedAmount prevMetricsLog.Res -> true
+        | prevMetricsLog when recordsLog.Lo <= computeAdjustedAmount prevMetricsLog.Sup -> false
         | prevMetricsLog -> prevMetricsLog.Trending
 
     { ResLookback = resLookback

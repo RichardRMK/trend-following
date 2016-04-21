@@ -12,22 +12,22 @@ let chooseExitOrder = function Exit order -> Some order | _ -> None
 
 //-------------------------------------------------------------------------------------------------
 
-let private computeOptional placeholder = function
+let computeOptional placeholder = function
     | None -> placeholder
     | Some value -> value
 
-let private computeAdjustedAmount splitNew splitOld dividend basis amount =
+let computeAdjustedAmount splitNew splitOld dividend basis amount =
     amount
     |> (*) (1m - (dividend / basis))
     |> (*) (decimal splitOld / decimal splitNew)
 
-let private computeAdjustedShares splitNew splitOld shares =
+let computeAdjustedShares splitNew splitOld shares =
     shares
     |> decimal
     |> (*) (decimal splitNew / decimal splitOld)
     |> uint32
 
-let private computeAdjustedExcess splitNew splitOld shares =
+let computeAdjustedExcess splitNew splitOld shares =
     shares
     |> computeAdjustedShares splitNew splitOld
     |> decimal

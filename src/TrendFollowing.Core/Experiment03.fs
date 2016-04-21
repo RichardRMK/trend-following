@@ -30,34 +30,40 @@ let private computeMetricsLogInit (recordsLog : RecordsLog) =
 
 let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : ElementLog<MetricsLog>) =
 
+    let computeAdjustedAmount =
+        Metrics.computeAdjustedAmount recordsLog prevElementLog
+
     let prevMetricsLog = prevElementLog.MetricsLog
+    let prevSarEp = computeAdjustedAmount prevMetricsLog.SarEp
+    let prevSarAf = prevMetricsLog.SarAf
+    let prevSar = computeAdjustedAmount prevMetricsLog.Sar
 
     match prevMetricsLog.Trending with
-    | Pos when recordsLog.Lo <= prevMetricsLog.Sar
+    | Pos when recordsLog.Lo <= prevSar
         ->
         { SarEp    = recordsLog.Lo
           SarAf    = paramSarAfInc
-          Sar      = prevMetricsLog.SarEp
+          Sar      = prevSarEp
           Trending = Neg }
-    | Neg when recordsLog.Hi >= prevMetricsLog.Sar
+    | Neg when recordsLog.Hi >= prevSar
         ->
         { SarEp    = recordsLog.Hi
           SarAf    = paramSarAfInc
-          Sar      = prevMetricsLog.SarEp
+          Sar      = prevSarEp
           Trending = Pos }
     | Pos
         ->
-        let incAf = if recordsLog.Hi > prevMetricsLog.SarEp then paramSarAfInc else 0m
-        { SarEp    = max recordsLog.Hi prevMetricsLog.SarEp
-          SarAf    = min paramSarAfMax (prevMetricsLog.SarAf + incAf)
-          Sar      = prevMetricsLog.Sar + (prevMetricsLog.SarAf * (prevMetricsLog.SarEp - prevMetricsLog.Sar))
+        let incAf = if recordsLog.Hi > prevSarEp then paramSarAfInc else 0m
+        { SarEp    = max recordsLog.Hi prevSarEp
+          SarAf    = min paramSarAfMax (prevSarAf + incAf)
+          Sar      = prevSar + (prevSarAf * (prevSarEp - prevSar))
           Trending = Pos }
     | Neg
         ->
-        let incAf = if recordsLog.Lo < prevMetricsLog.SarEp then paramSarAfInc else 0m
-        { SarEp    = min recordsLog.Lo prevMetricsLog.SarEp
-          SarAf    = min paramSarAfMax (prevMetricsLog.SarAf + incAf)
-          Sar      = prevMetricsLog.Sar + (prevMetricsLog.SarAf * (prevMetricsLog.SarEp - prevMetricsLog.Sar))
+        let incAf = if recordsLog.Lo < prevSarEp then paramSarAfInc else 0m
+        { SarEp    = min recordsLog.Lo prevSarEp
+          SarAf    = min paramSarAfMax (prevSarAf + incAf)
+          Sar      = prevSar + (prevSarAf * (prevSarEp - prevSar))
           Trending = Neg }
 
 let computeMetricsLog (recordsLog : RecordsLog) = function
