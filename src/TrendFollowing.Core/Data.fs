@@ -44,8 +44,32 @@ let private sqlGetHolidays = @"..\..\sql\GetHolidays.sql"
 
 type private GetHolidaysCommandProvider = SqlCommandProvider<sqlGetHolidays, connectionName, ConfigFile = configFile>
 
-let getHolidays (dateFrom : DateTime) (dateTo : DateTime) =
+let getHolidays dateStart dateFinal =
     use command = new GetHolidaysCommandProvider()
-    let records = command.Execute(dateFrom, dateTo)
+    let records = command.Execute(dateStart, dateFinal)
     records
     |> Seq.toArray
+
+//-------------------------------------------------------------------------------------------------
+
+let getDates dateStart dateFinal =
+
+    let holidays = getHolidays dateStart dateFinal
+
+    let generator = function
+        | date when date > dateFinal -> None
+        | date -> Some (date, date + TimeSpan.FromDays(1.0))
+
+    let isWeekend (date : DateTime) =
+        match date.DayOfWeek with
+        | DayOfWeek.Saturday -> true
+        | DayOfWeek.Sunday   -> true
+        | _ -> false
+
+    let isHoliday (date : DateTime) =
+        holidays |> Array.contains date
+
+    dateStart
+    |> Seq.unfold generator
+    |> Seq.filter (not << isWeekend)
+    |> Seq.filter (not << isHoliday)

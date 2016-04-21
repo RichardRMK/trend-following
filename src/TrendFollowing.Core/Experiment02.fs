@@ -89,31 +89,9 @@ let calculateExitStop (elementLog : ElementLog<MetricsLog>) : decimal =
 
 //-------------------------------------------------------------------------------------------------
 
-let getDates dateFrom dateTo =
-
-    let holidays = Data.getHolidays dateFrom dateTo
-
-    let generator = function
-        | date when date > dateTo-> None
-        | date -> Some (date, date + TimeSpan.FromDays(1.0))
-
-    let isWeekend (date : DateTime) =
-        match date.DayOfWeek with
-        | DayOfWeek.Saturday -> true
-        | DayOfWeek.Sunday   -> true
-        | _ -> false
-
-    let isHoliday date =
-        holidays |> Array.contains date
-
-    dateFrom
-    |> Seq.unfold generator
-    |> Seq.filter (not << isWeekend)
-    |> Seq.filter (not << isHoliday)
-
-let dates = getDates (DateTime(1990, 01, 01)) (DateTime(2016, 04, 17))
-
-//-------------------------------------------------------------------------------------------------
+let dateStart = DateTime(1990, 01, 01)
+let dateFinal = DateTime.Today
+let dates = Data.getDates dateStart dateFinal
 
 let model =
     { GetQuotes         = Data.getQuotes
