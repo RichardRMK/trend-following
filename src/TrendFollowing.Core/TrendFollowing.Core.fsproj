@@ -68,6 +68,7 @@
     <Compile Include="Experiment01.fs" />
     <Compile Include="Experiment02.fs" />
     <Compile Include="Experiment03.fs" />
+    <Compile Include="Experiment04.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Data.SqlClient">
