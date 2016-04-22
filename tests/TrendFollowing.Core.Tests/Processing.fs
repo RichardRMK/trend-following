@@ -601,9 +601,9 @@ let ``Process transactions, take position and exit position on the same day`` ()
     journalLog.Date        |> should equal date2
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal -100
-    journalLog.Cash        |> should equal +10101.00m
+    journalLog.Cash        |> should equal +10100.00m
     detail.Shares          |> should equal 100u
-    detail.Price           |> should equal 101.01m
+    detail.Price           |> should equal 101.00m
 
     let recordsLog = elementLogs.[0].RecordsLog
     recordsLog.Date        |> should equal date2
@@ -621,11 +621,11 @@ let ``Process transactions, take position and exit position on the same day`` ()
     recordsLog.ExitStop    |> should equal (Some 101.01m)
 
     summaryLog.Date        |> should equal date2
-    summaryLog.Cash        |> should equal  999901.00m
-    summaryLog.Equity      |> should equal  999901.00m
-    summaryLog.ExitValue   |> should equal  999901.00m
+    summaryLog.Cash        |> should equal  999900.00m
+    summaryLog.Equity      |> should equal  999900.00m
+    summaryLog.ExitValue   |> should equal  999900.00m
     summaryLog.Peak        |> should equal 1000000.00m
-    summaryLog.Drawdown    |> should equal -0.0000990m
+    summaryLog.Drawdown    |> should equal -0.0001000m
     summaryLog.Leverage    |> should equal 0m
 
 //-------------------------------------------------------------------------------------------------
@@ -701,9 +701,9 @@ let ``Process transactions, take position and then exit position`` () =
     journalLog.Date        |> should equal date3
     journalLog.Ticker      |> should equal "X"
     journalLog.Shares      |> should equal -100
-    journalLog.Cash        |> should equal +10202.00m
+    journalLog.Cash        |> should equal +10200.00m
     detail.Shares          |> should equal 100u
-    detail.Price           |> should equal 102.02m
+    detail.Price           |> should equal 102.00m
 
     let recordsLog = elementLogs.[0].RecordsLog
     recordsLog.Date        |> should equal date3
@@ -721,10 +721,10 @@ let ``Process transactions, take position and then exit position`` () =
     recordsLog.ExitStop    |> should equal (Some 102.02m)
 
     summaryLog.Date        |> should equal date3
-    summaryLog.Cash        |> should equal 1000002.00m
-    summaryLog.Equity      |> should equal 1000002.00m
-    summaryLog.ExitValue   |> should equal 1000002.00m
-    summaryLog.Peak        |> should equal 1000002.00m
+    summaryLog.Cash        |> should equal 1000000.00m
+    summaryLog.Equity      |> should equal 1000000.00m
+    summaryLog.ExitValue   |> should equal 1000000.00m
+    summaryLog.Peak        |> should equal 1000000.00m
     summaryLog.Drawdown    |> should equal 0m
     summaryLog.Leverage    |> should equal 0m
 

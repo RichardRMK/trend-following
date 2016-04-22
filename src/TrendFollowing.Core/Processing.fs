@@ -271,7 +271,7 @@ let processTransactionsExecuteExit orders (quotes : Quote[]) =
 
         let detail : JournalExecuteExit =
             { Shares = order.Shares
-              Price  = order.Stop }
+              Price  = quote.Lo }
 
         { Date   = quote.Date
           Ticker = order.Ticker
