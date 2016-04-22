@@ -445,8 +445,8 @@ let ``Process transactions, take position`` () =
 
     let calculateExitStop elementLog =
         match (elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date) with
-        | "X", date when date = date1 -> 100.01m
-        | "X", date when date = date2 -> 100.02m
+        | "X", date when date = date1 -> 100.10m
+        | "X", date when date = date2 -> 100.20m
         | _ -> unexpectedCall ()
 
     let model =
@@ -508,20 +508,20 @@ let ``Process transactions, take position`` () =
     recordsLog.DeltaHi     |> should equal (1.00m / 101.00m)
     recordsLog.DeltaLo     |> should equal (1.00m / 100.00m)
     recordsLog.Shares      |> should equal 100u
-    recordsLog.ExitStop    |> should equal (Some 100.01m)
+    recordsLog.ExitStop    |> should equal (Some 100.10m)
 
     summaryLog.Date        |> should equal date2
     summaryLog.Cash        |> should equal  989800.00m
     summaryLog.Equity      |> should equal  999950.00m
-    summaryLog.ExitValue   |> should equal  999801.00m
+    summaryLog.ExitValue   |> should equal  999810.00m
     summaryLog.Peak        |> should equal 1000000.00m
-    summaryLog.Drawdown    |> should equal -0.0001990m
-    summaryLog.Leverage    |> should equal (1m - (989800.00m / 999801.00m))
+    summaryLog.Drawdown    |> should equal -0.0001900m
+    summaryLog.Leverage    |> should equal (1m - (989800.00m / 999810.00m))
 
     let nextExitOrder = nextExitOrders.[0]
     nextExitOrder.Ticker   |> should equal "X"
     nextExitOrder.Shares   |> should equal 100u
-    nextExitOrder.Stop     |> should equal 100.02m
+    nextExitOrder.Stop     |> should equal 100.20m
 
 //-------------------------------------------------------------------------------------------------
 
@@ -547,7 +547,7 @@ let ``Process transactions, take position and exit position on the same day`` ()
 
     let calculateExitStop elementLog =
         match (elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date) with
-        | "X", date when date = date1 -> 101.01m
+        | "X", date when date = date1 -> 101.10m
         | _ -> unexpectedCall ()
 
     let model =
@@ -618,7 +618,7 @@ let ``Process transactions, take position and exit position on the same day`` ()
     recordsLog.DeltaHi     |> should equal (1.00m / 101.00m)
     recordsLog.DeltaLo     |> should equal (1.00m / 100.00m)
     recordsLog.Shares      |> should equal 0u
-    recordsLog.ExitStop    |> should equal (Some 101.01m)
+    recordsLog.ExitStop    |> should equal (Some 101.10m)
 
     summaryLog.Date        |> should equal date2
     summaryLog.Cash        |> should equal  999900.00m
@@ -654,8 +654,8 @@ let ``Process transactions, take position and then exit position`` () =
 
     let calculateExitStop elementLog =
         match (elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date) with
-        | "X", date when date = date1 -> 100.01m
-        | "X", date when date = date2 -> 102.02m
+        | "X", date when date = date1 -> 100.10m
+        | "X", date when date = date2 -> 102.20m
         | _ -> unexpectedCall ()
 
     let model =
@@ -718,7 +718,7 @@ let ``Process transactions, take position and then exit position`` () =
     recordsLog.DeltaHi     |> should equal (1.00m / 102.00m)
     recordsLog.DeltaLo     |> should equal (1.00m / 101.00m)
     recordsLog.Shares      |> should equal 0u
-    recordsLog.ExitStop    |> should equal (Some 102.02m)
+    recordsLog.ExitStop    |> should equal (Some 102.20m)
 
     summaryLog.Date        |> should equal date3
     summaryLog.Cash        |> should equal 1000000.00m
@@ -754,9 +754,9 @@ let ``Process transactions, take position and then hold position`` () =
 
     let calculateExitStop elementLog =
         match (elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date) with
-        | "X", date when date = date1 -> 100.01m
-        | "X", date when date = date2 -> 100.02m
-        | "X", date when date = date3 -> 100.03m
+        | "X", date when date = date1 -> 100.10m
+        | "X", date when date = date2 -> 100.20m
+        | "X", date when date = date3 -> 100.30m
         | _ -> unexpectedCall ()
 
     let model =
@@ -810,20 +810,20 @@ let ``Process transactions, take position and then hold position`` () =
     recordsLog.DeltaHi     |> should equal (1.00m / 102.00m)
     recordsLog.DeltaLo     |> should equal (1.00m / 101.00m)
     recordsLog.Shares      |> should equal 100u
-    recordsLog.ExitStop    |> should equal (Some 100.02m)
+    recordsLog.ExitStop    |> should equal (Some 100.20m)
 
     summaryLog.Date        |> should equal date3
     summaryLog.Cash        |> should equal  989800.00m
     summaryLog.Equity      |> should equal 1000050.00m
-    summaryLog.ExitValue   |> should equal  999802.00m
+    summaryLog.ExitValue   |> should equal  999820.00m
     summaryLog.Peak        |> should equal 1000000.00m
-    summaryLog.Drawdown    |> should equal -0.0001980m
-    summaryLog.Leverage    |> should equal (1m - (989800.00m / 999802.00m))
+    summaryLog.Drawdown    |> should equal -0.0001800m
+    summaryLog.Leverage    |> should equal (1m - (989800.00m / 999820.00m))
 
     let nextExitOrder = nextExitOrders.[0]
     nextExitOrder.Ticker   |> should equal "X"
     nextExitOrder.Shares   |> should equal 100u
-    nextExitOrder.Stop     |> should equal 100.03m
+    nextExitOrder.Stop     |> should equal 100.30m
 
 //-------------------------------------------------------------------------------------------------
 
@@ -852,9 +852,9 @@ let ``Process transactions, take position and then stack onto existing position`
 
     let calculateExitStop elementLog =
         match (elementLog.RecordsLog.Ticker, elementLog.RecordsLog.Date) with
-        | "X", date when date = date1 -> 100.01m
-        | "X", date when date = date2 -> 100.02m
-        | "X", date when date = date3 -> 100.03m
+        | "X", date when date = date1 -> 100.10m
+        | "X", date when date = date2 -> 100.20m
+        | "X", date when date = date3 -> 100.30m
         | _ -> unexpectedCall ()
 
     let model =
@@ -917,20 +917,20 @@ let ``Process transactions, take position and then stack onto existing position`
     recordsLog.DeltaHi     |> should equal (1.00m / 102.00m)
     recordsLog.DeltaLo     |> should equal (1.00m / 101.00m)
     recordsLog.Shares      |> should equal 250u
-    recordsLog.ExitStop    |> should equal (Some 100.02m)
+    recordsLog.ExitStop    |> should equal (Some 100.20m)
 
     summaryLog.Date        |> should equal date3
     summaryLog.Cash        |> should equal  974350.00m
     summaryLog.Equity      |> should equal  999975.00m
-    summaryLog.ExitValue   |> should equal  999355.00m
+    summaryLog.ExitValue   |> should equal  999400.00m
     summaryLog.Peak        |> should equal 1000000.00m
-    summaryLog.Drawdown    |> should equal -0.0006450m
-    summaryLog.Leverage    |> should equal (1m - (974350.00m / 999355.00m))
+    summaryLog.Drawdown    |> should equal -0.0006000m
+    summaryLog.Leverage    |> should equal (1m - (974350.00m / 999400.00m))
 
     let nextExitOrder = nextExitOrders.[0]
     nextExitOrder.Ticker   |> should equal "X"
     nextExitOrder.Shares   |> should equal 250u
-    nextExitOrder.Stop     |> should equal 100.03m
+    nextExitOrder.Stop     |> should equal 100.30m
 
 //-------------------------------------------------------------------------------------------------
 
