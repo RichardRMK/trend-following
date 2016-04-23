@@ -33,32 +33,31 @@ let rec private format (value : obj) =
     | :? JournalDetail -> value |> sprintf "%A" |> replace "\s+" " "
     | value -> value.ToString()
 
-let private getFields log =
-    log.GetType()
-    |> Reflection.FSharpType.GetRecordFields
-    |> Seq.map (fun info -> info, log)
+let private getFields types =
+    types
+    |> Seq.map Reflection.FSharpType.GetRecordFields
+    |> Seq.toArray
 
-let private getTitles logs =
-    logs
-    |> Seq.map getFields
+let private getTitles (fields : Reflection.PropertyInfo[][]) =
+    fields
     |> Seq.concat
-    |> Seq.map (fun (info, log) -> info.Name)
+    |> Seq.map (fun field -> field.Name)
     |> Seq.reduce commaDelimited
 
-let private getValues logs =
-    logs
-    |> Seq.map getFields
+let private getValues (fields : Reflection.PropertyInfo[][]) logs =
+    let mapping fields log = Array.map (fun field -> field, log) fields
+    Seq.map2 mapping fields logs
     |> Seq.concat
-    |> Seq.map (fun (info, log) -> info.GetValue(log))
+    |> Seq.map (fun (field, log) -> field.GetValue(log))
     |> Seq.map format
     |> Seq.reduce commaDelimited
 
 //-------------------------------------------------------------------------------------------------
 
-let private report logs filename =
+let private report fields logs filename =
 
-    let titles = getTitles logs
-    let values = getValues logs
+    let titles = getTitles fields
+    let values = getValues fields logs
     let output = folder + filename + extension
 
     if (Directory.Exists(folder) = false) then
@@ -71,17 +70,23 @@ let private report logs filename =
 
 //-------------------------------------------------------------------------------------------------
 
-let reportElementLog (elementLog : ElementLog<_>) =
-    let logs : obj list = [ elementLog.RecordsLog; elementLog.MetricsLog ]
-    let filename = filename<ElementLog<_>> + "-" + elementLog.RecordsLog.Ticker
-    report logs filename
+let reportElementLog<'T> =
+    let fields = getFields [ typeof<RecordsLog>; typeof<'T> ]
+    fun (elementLog : ElementLog<'T>) ->
+        let logs : obj list = [ elementLog.RecordsLog; elementLog.MetricsLog ]
+        let filename = filename<ElementLog<_>> + "-" + elementLog.RecordsLog.Ticker
+        report fields logs filename
 
-let reportSummaryLog (summaryLog : SummaryLog) =
-    let logs : obj list = [ summaryLog ]
-    let filename = filename<SummaryLog>
-    report logs filename
+let reportSummaryLog =
+    let fields = getFields [ typeof<SummaryLog> ]
+    fun (summaryLog : SummaryLog) ->
+        let logs : obj list = [ summaryLog ]
+        let filename = filename<SummaryLog>
+        report fields logs filename
 
-let reportJournalLog (journalLog : JournalLog) =
-    let logs : obj list = [ journalLog ]
-    let filename = filename<JournalLog>
-    report logs filename
+let reportJournalLog =
+    let fields = getFields [ typeof<JournalLog> ]
+    fun (journalLog : JournalLog) ->
+        let logs : obj list = [ journalLog ]
+        let filename = filename<JournalLog>
+        report fields logs filename
