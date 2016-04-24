@@ -98,13 +98,13 @@ type Order =
 //-------------------------------------------------------------------------------------------------
 
 type Model<'T> =
-    { GetQuotes         : DateTime -> Quote[]
-      ComputeMetricsLog : RecordsLog -> ElementLog<'T> option -> 'T
+    { ComputeMetricsLog : RecordsLog -> ElementLog<'T> option -> 'T
       ComputeTakeOrders : ElementLog<'T>[] -> SummaryLog -> TakeOrder[]
       CalculateExitStop : ElementLog<'T> -> decimal }
 
 type Simulation<'T> =
     { Principal         : decimal
+      GetQuotes         : DateTime -> Quote[]
       Dates             : DateTime seq
       Model             : Model<'T>
       ReportElementLog  : ElementLog<'T> -> unit

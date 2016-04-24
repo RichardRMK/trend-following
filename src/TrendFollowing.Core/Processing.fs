@@ -377,9 +377,9 @@ let processTransactionsSplitShares prevElementLogs (quotes : Quote[]) =
 
 //-------------------------------------------------------------------------------------------------
 
-let runIncrement model (_, prevElementLogs, prevSummaryLog, orders) date =
+let runIncrement getQuotes model (_, prevElementLogs, prevSummaryLog, orders) date =
 
-    let quotes = model.GetQuotes date
+    let quotes = getQuotes date
     let orders = adjustOrders prevElementLogs orders quotes
 
     let journalLogsExecuteTake = quotes |> processTransactionsExecuteTake orders
@@ -427,5 +427,5 @@ let runSimulation simulation =
     let nextOrders = Array.empty
 
     simulation.Dates
-    |> Seq.scan (runIncrement simulation.Model) (journalLogs, elementLogs, summaryLog, nextOrders)
+    |> Seq.scan (runIncrement simulation.GetQuotes simulation.Model) (journalLogs, elementLogs, summaryLog, nextOrders)
     |> Seq.iter reportResults

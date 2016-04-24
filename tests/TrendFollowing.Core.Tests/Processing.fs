@@ -51,8 +51,7 @@ let ``Baseline increment`` () =
         |> Array.filter (fun x -> x.Date = date)
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = (fun _ _ -> Array.empty)
           CalculateExitStop = (fun _ -> unexpectedCall ()) }
 
@@ -66,7 +65,7 @@ let ``Baseline increment`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
+    let state1 = date1 |> runIncrement getQuotes model state0
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state1
 
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
@@ -127,8 +126,7 @@ let ``Compute delta, price move`` () =
         |> Array.filter (fun x -> x.Date = date)
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = (fun _ _ -> Array.empty)
           CalculateExitStop = (fun _ -> unexpectedCall ()) }
 
@@ -142,8 +140,8 @@ let ``Compute delta, price move`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
@@ -179,8 +177,7 @@ let ``Compute delta, price move, dividend 10%`` () =
         |> Array.filter (fun x -> x.Date = date)
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = (fun _ _ -> Array.empty)
           CalculateExitStop = (fun _ -> unexpectedCall ()) }
 
@@ -194,8 +191,8 @@ let ``Compute delta, price move, dividend 10%`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
@@ -231,8 +228,7 @@ let ``Compute delta, price move, dividend 50%`` () =
         |> Array.filter (fun x -> x.Date = date)
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = (fun _ _ -> Array.empty)
           CalculateExitStop = (fun _ -> unexpectedCall ()) }
 
@@ -246,8 +242,8 @@ let ``Compute delta, price move, dividend 50%`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
@@ -283,8 +279,7 @@ let ``Compute delta, price move, split 2:1`` () =
         |> Array.filter (fun x -> x.Date = date)
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = (fun _ _ -> Array.empty)
           CalculateExitStop = (fun _ -> unexpectedCall ()) }
 
@@ -298,8 +293,8 @@ let ``Compute delta, price move, split 2:1`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
@@ -335,8 +330,7 @@ let ``Compute delta, price move, split 2:3`` () =
         |> Array.filter (fun x -> x.Date = date)
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = (fun _ _ -> Array.empty)
           CalculateExitStop = (fun _ -> unexpectedCall ()) }
 
@@ -350,8 +344,8 @@ let ``Compute delta, price move, split 2:3`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
@@ -387,8 +381,7 @@ let ``Compute delta, price move, both dividend 10% and split 2:1`` () =
         |> Array.filter (fun x -> x.Date = date)
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = (fun _ _ -> Array.empty)
           CalculateExitStop = (fun _ -> unexpectedCall ()) }
 
@@ -402,8 +395,8 @@ let ``Compute delta, price move, both dividend 10% and split 2:1`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let recordsLog = elementLogs.[0].RecordsLog
@@ -450,8 +443,7 @@ let ``Process transactions, take position`` () =
         | _ -> unexpectedCall ()
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
           CalculateExitStop = calculateExitStop }
 
@@ -465,8 +457,8 @@ let ``Process transactions, take position`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
@@ -551,8 +543,7 @@ let ``Process transactions, take position and exit position on the same day`` ()
         | _ -> unexpectedCall ()
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
           CalculateExitStop = calculateExitStop }
 
@@ -566,8 +557,8 @@ let ``Process transactions, take position and exit position on the same day`` ()
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
@@ -659,8 +650,7 @@ let ``Process transactions, take position and then exit position`` () =
         | _ -> unexpectedCall ()
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
           CalculateExitStop = calculateExitStop }
 
@@ -674,9 +664,9 @@ let ``Process transactions, take position and then exit position`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
-    let state3 = date3 |> runIncrement model state2
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
+    let state3 = date3 |> runIncrement getQuotes model state2
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
@@ -760,8 +750,7 @@ let ``Process transactions, take position and then hold position`` () =
         | _ -> unexpectedCall ()
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
           CalculateExitStop = calculateExitStop }
 
@@ -775,9 +764,9 @@ let ``Process transactions, take position and then hold position`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
-    let state3 = date3 |> runIncrement model state2
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
+    let state3 = date3 |> runIncrement getQuotes model state2
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
@@ -858,8 +847,7 @@ let ``Process transactions, take position and then stack onto existing position`
         | _ -> unexpectedCall ()
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
           CalculateExitStop = calculateExitStop }
 
@@ -873,9 +861,9 @@ let ``Process transactions, take position and then stack onto existing position`
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
-    let state3 = date3 |> runIncrement model state2
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
+    let state3 = date3 |> runIncrement getQuotes model state2
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
@@ -959,8 +947,7 @@ let ``Process transactions, with discontinued quote, ignore order to take positi
         | _ -> unexpectedCall ()
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
           CalculateExitStop = calculateExitStop }
 
@@ -974,8 +961,8 @@ let ``Process transactions, with discontinued quote, ignore order to take positi
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state2
 
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
@@ -1025,8 +1012,7 @@ let ``Process transactions, with discontinued quote, liquidate existing position
         | _ -> unexpectedCall ()
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
           CalculateExitStop = calculateExitStop }
 
@@ -1040,9 +1026,9 @@ let ``Process transactions, with discontinued quote, liquidate existing position
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
-    let state3 = date3 |> runIncrement model state2
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
+    let state3 = date3 |> runIncrement getQuotes model state2
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
@@ -1111,8 +1097,7 @@ let ``Process transactions, with dividend 10%, existing position`` () =
         | _ -> unexpectedCall ()
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
           CalculateExitStop = calculateExitStop }
 
@@ -1126,9 +1111,9 @@ let ``Process transactions, with dividend 10%, existing position`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
-    let state3 = date3 |> runIncrement model state2
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
+    let state3 = date3 |> runIncrement getQuotes model state2
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
@@ -1217,8 +1202,7 @@ let ``Process transactions, with dividend 10%, take position`` () =
         | _ -> unexpectedCall ()
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
           CalculateExitStop = calculateExitStop }
 
@@ -1232,9 +1216,9 @@ let ``Process transactions, with dividend 10%, take position`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
-    let state3 = date3 |> runIncrement model state2
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
+    let state3 = date3 |> runIncrement getQuotes model state2
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
@@ -1323,8 +1307,7 @@ let ``Process transactions, with split 2:1, existing position`` () =
         | _ -> unexpectedCall ()
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
           CalculateExitStop = calculateExitStop }
 
@@ -1338,9 +1321,9 @@ let ``Process transactions, with split 2:1, existing position`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
-    let state3 = date3 |> runIncrement model state2
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
+    let state3 = date3 |> runIncrement getQuotes model state2
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
@@ -1431,8 +1414,7 @@ let ``Process transactions, with split 2:1, take position`` () =
         | _ -> unexpectedCall ()
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
           CalculateExitStop = calculateExitStop }
 
@@ -1446,9 +1428,9 @@ let ``Process transactions, with split 2:1, take position`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
-    let state3 = date3 |> runIncrement model state2
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
+    let state3 = date3 |> runIncrement getQuotes model state2
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
@@ -1537,8 +1519,7 @@ let ``Process transactions, with split 2:3, existing position`` () =
         | _ -> unexpectedCall ()
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
           CalculateExitStop = calculateExitStop }
 
@@ -1552,9 +1533,9 @@ let ``Process transactions, with split 2:3, existing position`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
-    let state3 = date3 |> runIncrement model state2
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
+    let state3 = date3 |> runIncrement getQuotes model state2
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)
@@ -1645,8 +1626,7 @@ let ``Process transactions, with split 2:3, take position`` () =
         | _ -> unexpectedCall ()
 
     let model =
-        { GetQuotes         = getQuotes
-          ComputeMetricsLog = (fun _ _ -> ())
+        { ComputeMetricsLog = (fun _ _ -> ())
           ComputeTakeOrders = computeTakeOrders
           CalculateExitStop = calculateExitStop }
 
@@ -1660,9 +1640,9 @@ let ``Process transactions, with split 2:3, take position`` () =
           Leverage  = 0m }
 
     let state0 = (Array.empty, Array.empty, summaryLog, Array.empty)
-    let state1 = date1 |> runIncrement model state0
-    let state2 = date2 |> runIncrement model state1
-    let state3 = date3 |> runIncrement model state2
+    let state1 = date1 |> runIncrement getQuotes model state0
+    let state2 = date2 |> runIncrement getQuotes model state1
+    let state3 = date3 |> runIncrement getQuotes model state2
     let (journalLogs, elementLogs, summaryLog, nextOrders) = state3
 
     let journalLogsExecuteTake = journalLogs |> Array.filter (sieve ExecuteTake)

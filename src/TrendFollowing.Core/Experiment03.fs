@@ -101,13 +101,13 @@ let getQuotes = Data.getQuotes dateStart dateFinal
 let dates = Data.getDates dateStart dateFinal
 
 let model =
-    { GetQuotes         = getQuotes
-      ComputeMetricsLog = computeMetricsLog
+    { ComputeMetricsLog = computeMetricsLog
       ComputeTakeOrders = computeTakeOrders
       CalculateExitStop = calculateExitStop }
 
 let simulation =
     { Principal         = 1000000.00m
+      GetQuotes         = getQuotes
       Dates             = dates
       Model             = model
       ReportElementLog  = reportElementLog
