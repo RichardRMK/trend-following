@@ -97,10 +97,11 @@ let calculateExitStop (elementLog : ElementLog<MetricsLog>) : decimal =
 
 let dateStart = DateTime(1990, 01, 01)
 let dateFinal = DateTime.Today
+let getQuotes = Data.getQuotes dateStart dateFinal
 let dates = Data.getDates dateStart dateFinal
 
 let model =
-    { GetQuotes         = Data.getQuotes
+    { GetQuotes         = getQuotes
       ComputeMetricsLog = computeMetricsLog
       ComputeTakeOrders = computeTakeOrders
       CalculateExitStop = calculateExitStop }

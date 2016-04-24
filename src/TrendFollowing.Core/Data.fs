@@ -14,47 +14,60 @@ let private configFile = @"..\..\private\App.config"
 
 //-------------------------------------------------------------------------------------------------
 
-[<Literal>]
-let private sqlGetQuotes = @"..\..\sql\GetQuotes.sql"
+module private GetQuotes =
 
-type private GetQuotesCommandProvider = SqlCommandProvider<sqlGetQuotes, connectionName, ConfigFile = configFile>
+    [<Literal>]
+    let private sql = @"..\..\sql\GetQuotes.sql"
 
-let private toQuote (record : GetQuotesCommandProvider.Record) : Quote =
+    type private CommandProvider = SqlCommandProvider<sql, connectionName, ConfigFile = configFile>
 
-    { Date     = record.Date
-      Ticker   = record.Ticker
-      Hi       = record.Hi
-      Lo       = record.Lo
-      Close    = record.Close
-      Dividend = record.Dividend
-      SplitNew = record.SplitNew |> Option.map uint32
-      SplitOld = record.SplitOld |> Option.map uint32 }
+    let private ofRecord (record : CommandProvider.Record) : Quote =
 
-let getQuotes date =
-    use command = new GetQuotesCommandProvider()
-    let records = command.Execute(date)
-    records
-    |> Seq.map toQuote
-    |> Seq.toArray
+        { Date     = record.Date
+          Ticker   = record.Ticker
+          Hi       = record.Hi
+          Lo       = record.Lo
+          Close    = record.Close
+          Dividend = record.Dividend
+          SplitNew = record.SplitNew |> Option.map uint32
+          SplitOld = record.SplitOld |> Option.map uint32 }
+
+    let execute dateStart dateFinal =
+        use command = new CommandProvider()
+        let records = command.Execute(dateStart, dateFinal)
+        records
+        |> Seq.map ofRecord
+        |> Seq.toArray
+
+let private getQuoteLookup map date =
+    match Map.tryFind date map with
+    | Some quotes -> quotes
+    | None -> Array.empty
+
+let getQuotes dateStart dateFinal =
+    GetQuotes.execute dateStart dateFinal
+    |> Array.groupBy (fun quote -> quote.Date)
+    |> Map.ofArray
+    |> getQuoteLookup
 
 //-------------------------------------------------------------------------------------------------
 
-[<Literal>]
-let private sqlGetHolidays = @"..\..\sql\GetHolidays.sql"
+module private GetHolidays =
 
-type private GetHolidaysCommandProvider = SqlCommandProvider<sqlGetHolidays, connectionName, ConfigFile = configFile>
+    [<Literal>]
+    let private sql = @"..\..\sql\GetHolidays.sql"
 
-let getHolidays dateStart dateFinal =
-    use command = new GetHolidaysCommandProvider()
-    let records = command.Execute(dateStart, dateFinal)
-    records
-    |> Seq.toArray
+    type private CommandProvider = SqlCommandProvider<sql, connectionName, ConfigFile = configFile>
 
-//-------------------------------------------------------------------------------------------------
+    let execute dateStart dateFinal =
+        use command = new CommandProvider()
+        let records = command.Execute(dateStart, dateFinal)
+        records
+        |> Seq.toArray
 
 let getDates dateStart dateFinal =
 
-    let holidays = getHolidays dateStart dateFinal
+    let holidays = GetHolidays.execute dateStart dateFinal
 
     let generator = function
         | date when date > dateFinal -> None

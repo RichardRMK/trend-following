@@ -13,7 +13,7 @@ from
     left  join [Split] split on quote.[IssueId] = split.[IssueId] and quote.[Date] = split.[Date]
     inner join [Issue] issue on quote.[IssueId] = issue.[IssueId]
 where
-    quote.[Date] = @date
+    quote.[Date] between @dateStart and @dateFinal
     and issue.[Ticker] in ('MSFT')
 order by
     issue.[Ticker] asc
