@@ -109,4 +109,5 @@ type Simulation<'T> =
       Model             : Model<'T>
       ReportElementLog  : ElementLog<'T> -> unit
       ReportSummaryLog  : SummaryLog -> unit
-      ReportJournalLog  : JournalLog -> unit }
+      ReportJournalLog  : JournalLog -> unit
+      ReportCompletion  : unit -> unit }

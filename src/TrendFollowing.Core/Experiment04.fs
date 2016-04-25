@@ -102,6 +102,8 @@ let calculateExitStop (elementLog : ElementLog<MetricsLog>) : decimal =
 
 //-------------------------------------------------------------------------------------------------
 
+let reportAgent = ReportAgent()
+
 let dateStart = DateTime(1990, 01, 01)
 let dateFinal = DateTime.Today
 let getQuotes = Data.getQuotes dateStart dateFinal
@@ -117,6 +119,7 @@ let simulation =
       GetQuotes         = getQuotes
       Dates             = dates
       Model             = model
-      ReportElementLog  = reportElementLog
-      ReportSummaryLog  = reportSummaryLog
-      ReportJournalLog  = reportJournalLog }
+      ReportElementLog  = reportAgent.ReportElementLog
+      ReportSummaryLog  = reportAgent.ReportSummaryLog
+      ReportJournalLog  = reportAgent.ReportJournalLog
+      ReportCompletion  = reportAgent.ReportCompletion }

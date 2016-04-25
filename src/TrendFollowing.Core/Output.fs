@@ -84,23 +84,47 @@ let private report fields logs filename =
 
 //-------------------------------------------------------------------------------------------------
 
-let reportElementLog<'T> =
-    let fields = getFields [ typeof<RecordsLog>; typeof<'T> ]
-    fun (elementLog : ElementLog<'T>) ->
-        let logs : obj list = [ elementLog.RecordsLog; elementLog.MetricsLog ]
-        let filename = filename<ElementLog<_>> + "-" + elementLog.RecordsLog.Ticker
-        report fields logs filename
+type private ReportAgentMessage<'T> =
+    | Report of 'T
+    | Finish of AsyncReplyChannel<unit>
 
-let reportSummaryLog =
-    let fields = getFields [ typeof<SummaryLog> ]
-    fun (summaryLog : SummaryLog) ->
-        let logs : obj list = [ summaryLog ]
-        let filename = filename<SummaryLog>
-        report fields logs filename
+let private createReportAgent fields getLogs getFilename = MailboxProcessor.Start(fun inbox ->
+    async  {
+        while true do
+            let! message = inbox.Receive()
+            match message with
+            | Report log -> report fields (getLogs log) (getFilename log)
+            | Finish channel -> channel.Reply()
+    })
 
-let reportJournalLog =
-    let fields = getFields [ typeof<JournalLog> ]
-    fun (journalLog : JournalLog) ->
-        let logs : obj list = [ journalLog ]
-        let filename = filename<JournalLog>
-        report fields logs filename
+type ReportAgent<'T>() =
+
+    let fieldsElementLog = getFields [ typeof<RecordsLog>; typeof<'T> ]
+    let fieldsSummaryLog = getFields [ typeof<SummaryLog> ]
+    let fieldsJournalLog = getFields [ typeof<JournalLog> ]
+
+    let getLogsElementLog elementLog : obj list = [ elementLog.RecordsLog; elementLog.MetricsLog ]
+    let getLogsSummaryLog summaryLog : obj list = [ summaryLog ]
+    let getLogsJournalLog journalLog : obj list = [ journalLog ]
+
+    let getFilenameElementLog elementLog = filename<ElementLog<_>> + "-" + elementLog.RecordsLog.Ticker
+    let getFilenameSummaryLog summaryLog = filename<SummaryLog>
+    let getFilenameJournalLog journalLog = filename<JournalLog>
+
+    let agentElementLog = createReportAgent fieldsElementLog getLogsElementLog getFilenameElementLog
+    let agentSummaryLog = createReportAgent fieldsSummaryLog getLogsSummaryLog getFilenameSummaryLog
+    let agentJournalLog = createReportAgent fieldsJournalLog getLogsJournalLog getFilenameJournalLog
+
+    member this.ReportElementLog(elementLog : ElementLog<'T>) =
+        agentElementLog.Post(Report elementLog)
+
+    member this.ReportSummaryLog(summaryLog : SummaryLog) =
+        agentSummaryLog.Post(Report summaryLog)
+
+    member this.ReportJournalLog(journalLog : JournalLog) =
+        agentJournalLog.Post(Report journalLog)
+
+    member this.ReportCompletion() =
+        agentElementLog.PostAndReply(Finish)
+        agentSummaryLog.PostAndReply(Finish)
+        agentJournalLog.PostAndReply(Finish)

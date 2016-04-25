@@ -169,6 +169,8 @@ let dates =
 
 //-------------------------------------------------------------------------------------------------
 
+let reportAgent = ReportAgent()
+
 let model =
     { ComputeMetricsLog = computeMetricsLog
       ComputeTakeOrders = computeTakeOrders
@@ -179,6 +181,7 @@ let simulation =
       GetQuotes         = getQuotes
       Dates             = dates
       Model             = model
-      ReportElementLog  = reportElementLog
-      ReportSummaryLog  = reportSummaryLog
-      ReportJournalLog  = reportJournalLog }
+      ReportElementLog  = reportAgent.ReportElementLog
+      ReportSummaryLog  = reportAgent.ReportSummaryLog
+      ReportJournalLog  = reportAgent.ReportJournalLog
+      ReportCompletion  = reportAgent.ReportCompletion }
