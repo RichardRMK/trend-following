@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Text.RegularExpressions
 open TrendFollowing.Types
+open TrendFollowing.Metrics
 
 //-------------------------------------------------------------------------------------------------
 
@@ -25,13 +26,26 @@ let private commaDelimited x y =
 let private replace pattern replacement input =
     Regex.Replace(input, pattern, (replacement : string))
 
+let private formatDateTime (value : DateTime) =
+    value.ToString("yyyy-MM-dd")
+
+let private formatJournalDetail (value : JournalDetail) =
+    value
+    |> sprintf "%A"
+    |> replace "\s+" " "
+
+let private formatTrendDirection = function
+    | Positive -> "Positive"
+    | Negative -> "Negative"
+
 let rec private format (value : obj) =
     match value with
-    | :? DateTime as value -> value.ToString("yyyy-MM-dd")
-    | :? Option<obj> -> ""
+    | :? Option<obj>     -> ""
     | :? Option<decimal> as value -> value |> Option.get |> format
-    | :? JournalDetail -> value |> sprintf "%A" |> replace "\s+" " "
-    | value -> value.ToString()
+    | :? DateTime        as value -> value |> formatDateTime
+    | :? JournalDetail   as value -> value |> formatJournalDetail
+    | :? TrendDirection  as value -> value |> formatTrendDirection
+    | _                  -> value.ToString()
 
 let private getFields types =
     types

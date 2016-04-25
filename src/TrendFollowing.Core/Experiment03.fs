@@ -2,6 +2,7 @@
 
 open System
 open TrendFollowing.Types
+open TrendFollowing.Metrics
 open TrendFollowing.Output
 
 //-------------------------------------------------------------------------------------------------
@@ -12,8 +13,6 @@ let private paramSarAfInc = 0.002m
 let private paramSarAfMax = 0.020m
 
 //-------------------------------------------------------------------------------------------------
-
-type TrendDirection = Pos | Neg
 
 type MetricsLog =
     { SarEp    : decimal
@@ -26,7 +25,7 @@ let private computeMetricsLogInit (recordsLog : RecordsLog) =
     { SarEp    = recordsLog.Lo
       SarAf    = paramSarAfInc
       Sar      = recordsLog.Hi
-      Trending = Neg }
+      Trending = Negative }
 
 let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : ElementLog<MetricsLog>) =
 
@@ -39,32 +38,32 @@ let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : El
     let prevSar = computeAdjustedAmount prevMetricsLog.Sar
 
     match prevMetricsLog.Trending with
-    | Pos when recordsLog.Lo <= prevSar
+    | Positive when recordsLog.Lo <= prevSar
         ->
         { SarEp    = recordsLog.Lo
           SarAf    = paramSarAfInc
           Sar      = prevSarEp
-          Trending = Neg }
-    | Neg when recordsLog.Hi >= prevSar
+          Trending = Negative }
+    | Negative when recordsLog.Hi >= prevSar
         ->
         { SarEp    = recordsLog.Hi
           SarAf    = paramSarAfInc
           Sar      = prevSarEp
-          Trending = Pos }
-    | Pos
+          Trending = Positive }
+    | Positive
         ->
         let incAf = if recordsLog.Hi > prevSarEp then paramSarAfInc else 0m
         { SarEp    = max recordsLog.Hi prevSarEp
           SarAf    = min paramSarAfMax (prevSarAf + incAf)
           Sar      = prevSar + (prevSarAf * (prevSarEp - prevSar))
-          Trending = Pos }
-    | Neg
+          Trending = Positive }
+    | Negative
         ->
         let incAf = if recordsLog.Lo < prevSarEp then paramSarAfInc else 0m
         { SarEp    = min recordsLog.Lo prevSarEp
           SarAf    = min paramSarAfMax (prevSarAf + incAf)
           Sar      = prevSar + (prevSarAf * (prevSarEp - prevSar))
-          Trending = Neg }
+          Trending = Negative }
 
 let computeMetricsLog (recordsLog : RecordsLog) = function
     | None      -> computeMetricsLogInit recordsLog
@@ -86,7 +85,7 @@ let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : Sum
     elementLogs
     |> Array.filter (fun x -> x.RecordsLog.Count >= paramWait)
     |> Array.filter (fun x -> x.RecordsLog.Shares = 0u)
-    |> Array.filter (fun x -> x.MetricsLog.Trending = Pos)
+    |> Array.filter (fun x -> x.MetricsLog.Trending = Positive)
     |> Array.map computeOrder
 
 let calculateExitStop (elementLog : ElementLog<MetricsLog>) : decimal =

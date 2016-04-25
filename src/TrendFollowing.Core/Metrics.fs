@@ -4,6 +4,12 @@ open TrendFollowing.Types
 
 //-------------------------------------------------------------------------------------------------
 
+type TrendDirection =
+    | Positive
+    | Negative
+
+//-------------------------------------------------------------------------------------------------
+
 let computeAdjustedAmount (recordsLog : RecordsLog) (prevElementLog : ElementLog<_>) =
     let splitNew = recordsLog.SplitNew
     let splitOld = recordsLog.SplitOld
