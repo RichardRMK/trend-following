@@ -12,9 +12,9 @@ let chooseExitOrder = function Exit order -> Some order | _ -> None
 
 //-------------------------------------------------------------------------------------------------
 
-let computeOptional placeholder = function
-    | None -> placeholder
-    | Some value -> value
+let computeOptional normal =
+    normal
+    |> Option.fold (fun _ -> id)
 
 let computeAdjustedAmount splitNew splitOld dividend basis amount =
     amount

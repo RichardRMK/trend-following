@@ -39,10 +39,10 @@ module private GetQuotes =
         |> Seq.map ofRecord
         |> Seq.toArray
 
-let private getQuoteLookup map date =
-    match Map.tryFind date map with
-    | Some quotes -> quotes
-    | None -> Array.empty
+let private getQuoteLookup quotes date =
+    quotes
+    |> Map.tryFind date
+    |> Option.fold (fun _ -> id) Array.empty
 
 let getQuotes dateStart dateFinal =
     GetQuotes.execute dateStart dateFinal
