@@ -2,6 +2,7 @@
 
 open System
 open TrendFollowing.Types
+open TrendFollowing.Metrics
 open TrendFollowing.Output
 
 //-------------------------------------------------------------------------------------------------
@@ -9,30 +10,37 @@ open TrendFollowing.Output
 let private paramRisk = 0.1m
 let private paramWait = 200u
 let private paramRes = 200
-let private paramSup = 50
+let private paramSup = 200
+let private paramEma = 200
+let private paramRoc = 0.25m
 let private paramLag = 200
-let private paramRoc = 0.001m
 
 //-------------------------------------------------------------------------------------------------
 
 type MetricsLog =
-    { ResLookback : decimal[]
-      SupLookback : decimal[]
-      Res         : decimal
-      Sup         : decimal
-      Lag         : decimal
-      Roc         : decimal
-      Trending    : bool }
+    { ResLookback    : decimal[]
+      SupLookback    : decimal[]
+      Res            : decimal
+      Sup            : decimal
+      TrendDirection : TrendDirection
+      Ema            : decimal
+      Rps            : decimal
+      Roc            : decimal
+      RocAdj         : decimal
+      RocAdjLag      : decimal }
 
 let private computeMetricsLogInit (recordsLog : RecordsLog) =
 
-    { ResLookback = Array.create paramRes recordsLog.Hi
-      SupLookback = Array.create paramSup recordsLog.Lo
-      Res         = recordsLog.Hi
-      Sup         = recordsLog.Lo
-      Lag         = recordsLog.Lo
-      Roc         = 0m
-      Trending    = false }
+    { ResLookback    = Array.create paramRes recordsLog.Hi
+      SupLookback    = Array.create paramSup recordsLog.Lo
+      Res            = recordsLog.Hi
+      Sup            = recordsLog.Lo
+      TrendDirection = Negative
+      Ema            = recordsLog.Close
+      Rps            = recordsLog.Hi - recordsLog.Lo
+      Roc            = 0m
+      RocAdj         = 0m
+      RocAdjLag      = 0m }
 
 let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : ElementLog<MetricsLog>) =
 
@@ -54,23 +62,33 @@ let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : El
     let res = resLookback |> Array.max
     let sup = supLookback |> Array.min
 
-    let trending =
+    let trendDirection =
         match prevElementLog.MetricsLog with
-        | prevMetricsLog when recordsLog.Hi >= computeAdjustedAmount prevMetricsLog.Res -> true
-        | prevMetricsLog when recordsLog.Lo <= computeAdjustedAmount prevMetricsLog.Sup -> false
-        | prevMetricsLog -> prevMetricsLog.Trending
+        | prevMetricsLog when recordsLog.Hi >= computeAdjustedAmount prevMetricsLog.Res -> Positive
+        | prevMetricsLog when recordsLog.Lo <= computeAdjustedAmount prevMetricsLog.Sup -> Negative
+        | prevMetricsLog -> prevMetricsLog.TrendDirection
 
-    let prevLag = computeAdjustedAmount prevElementLog.MetricsLog.Lag
-    let lag = prevLag + ((recordsLog.Lo - prevLag) / decimal paramLag)
-    let roc = (recordsLog.Lo - prevLag) / (recordsLog.Lo * decimal paramLag)
+    let prevEma = computeAdjustedAmount prevElementLog.MetricsLog.Ema
+    let ema = prevEma + ((recordsLog.Close - prevEma) / decimal paramEma)
 
-    { ResLookback = resLookback
-      SupLookback = supLookback
-      Res         = res
-      Sup         = sup
-      Lag         = lag
-      Roc         = roc
-      Trending    = trending }
+    let rps = (res - sup)
+    let roc = (recordsLog.Close - prevEma) / (prevEma)
+    let roc = ((1.0 + float roc) ** (250.0 / float paramEma)) - 1.0 |> decimal
+    let rocAdj = roc * (res / rps)
+
+    let prevRocAdjLag = prevElementLog.MetricsLog.RocAdjLag
+    let rocAdjLag = prevRocAdjLag + ((rocAdj - prevRocAdjLag) / decimal paramLag)
+
+    { ResLookback    = resLookback
+      SupLookback    = supLookback
+      Res            = res
+      Sup            = sup
+      TrendDirection = trendDirection
+      Ema            = ema
+      Rps            = rps
+      Roc            = roc
+      RocAdj         = rocAdj
+      RocAdjLag      = rocAdjLag }
 
 let computeMetricsLog (recordsLog : RecordsLog) = function
     | None      -> computeMetricsLogInit recordsLog
@@ -82,9 +100,9 @@ let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : Sum
 
     let computeOrder elementLog : TakeOrder =
 
-        let roc = elementLog.MetricsLog.Roc
+        let res = elementLog.MetricsLog.Res
         let sup = elementLog.MetricsLog.Sup
-        let shares = (summaryLog.ExitValue * paramRisk) / (elementLog.RecordsLog.Hi - sup)
+        let shares = (summaryLog.ExitValue * paramRisk) / (res - sup)
 
         { Ticker = elementLog.RecordsLog.Ticker
           Shares = uint32 shares }
@@ -92,8 +110,8 @@ let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : Sum
     elementLogs
     |> Array.filter (fun x -> x.RecordsLog.Count >= paramWait)
     |> Array.filter (fun x -> x.RecordsLog.Shares = 0u)
-    |> Array.filter (fun x -> x.MetricsLog.Trending)
-    |> Array.filter (fun x -> x.MetricsLog.Roc >= paramRoc)
+    |> Array.filter (fun x -> x.MetricsLog.TrendDirection = Positive)
+    |> Array.filter (fun x -> x.MetricsLog.RocAdjLag >= paramRoc)
     |> Array.map computeOrder
 
 let calculateExitStop (elementLog : ElementLog<MetricsLog>) : decimal =

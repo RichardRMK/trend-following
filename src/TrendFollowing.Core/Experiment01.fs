@@ -2,20 +2,21 @@
 
 open System
 open TrendFollowing.Types
+open TrendFollowing.Metrics
 open TrendFollowing.Output
 
 //-------------------------------------------------------------------------------------------------
 
 type MetricsLog =
-    { Res      : decimal
-      Sup      : decimal
-      Trending : bool }
+    { Res            : decimal
+      Sup            : decimal
+      TrendDirection : TrendDirection }
 
 let private computeMetricsLogInit (recordsLog : RecordsLog) =
 
-    { Res      = recordsLog.Hi
-      Sup      = recordsLog.Lo
-      Trending = false }
+    { Res            = recordsLog.Hi
+      Sup            = recordsLog.Lo
+      TrendDirection = Negative }
 
 let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : ElementLog<MetricsLog>) =
 
@@ -25,15 +26,15 @@ let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : El
     let res = max recordsLog.Hi (computeAdjustedAmount prevElementLog.MetricsLog.Res)
     let sup = min recordsLog.Lo (computeAdjustedAmount prevElementLog.MetricsLog.Sup)
 
-    let trending =
+    let trendDirection =
         match prevElementLog.MetricsLog with
-        | prevMetricsLog when recordsLog.Lo <= prevMetricsLog.Sup -> false
-        | prevMetricsLog when recordsLog.Hi >= prevMetricsLog.Res -> true
-        | prevMetricsLog -> prevMetricsLog.Trending
+        | prevMetricsLog when recordsLog.Lo <= prevMetricsLog.Sup -> Negative
+        | prevMetricsLog when recordsLog.Hi >= prevMetricsLog.Res -> Positive
+        | prevMetricsLog -> prevMetricsLog.TrendDirection
 
-    { Res      = res
-      Sup      = sup
-      Trending = trending }
+    { Res            = res
+      Sup            = sup
+      TrendDirection = trendDirection }
 
 let computeMetricsLog (recordsLog : RecordsLog) = function
     | None      -> computeMetricsLogInit recordsLog

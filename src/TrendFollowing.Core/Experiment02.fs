@@ -2,6 +2,7 @@
 
 open System
 open TrendFollowing.Types
+open TrendFollowing.Metrics
 open TrendFollowing.Output
 
 //-------------------------------------------------------------------------------------------------
@@ -9,24 +10,24 @@ open TrendFollowing.Output
 let private paramRisk = 0.1m
 let private paramWait = 200u
 let private paramRes = 200
-let private paramSup = 50
+let private paramSup = 200
 
 //-------------------------------------------------------------------------------------------------
 
 type MetricsLog =
-    { ResLookback : decimal[]
-      SupLookback : decimal[]
-      Res         : decimal
-      Sup         : decimal
-      Trending    : bool }
+    { ResLookback    : decimal[]
+      SupLookback    : decimal[]
+      Res            : decimal
+      Sup            : decimal
+      TrendDirection : TrendDirection }
 
 let private computeMetricsLogInit (recordsLog : RecordsLog) =
 
-    { ResLookback = Array.create paramRes recordsLog.Hi
-      SupLookback = Array.create paramSup recordsLog.Lo
-      Res         = recordsLog.Hi
-      Sup         = recordsLog.Lo
-      Trending    = false }
+    { ResLookback    = Array.create paramRes recordsLog.Hi
+      SupLookback    = Array.create paramSup recordsLog.Lo
+      Res            = recordsLog.Hi
+      Sup            = recordsLog.Lo
+      TrendDirection = Negative }
 
 let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : ElementLog<MetricsLog>) =
 
@@ -48,17 +49,17 @@ let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : El
     let res = resLookback |> Array.max
     let sup = supLookback |> Array.min
 
-    let trending =
+    let trendDirection =
         match prevElementLog.MetricsLog with
-        | prevMetricsLog when recordsLog.Hi >= computeAdjustedAmount prevMetricsLog.Res -> true
-        | prevMetricsLog when recordsLog.Lo <= computeAdjustedAmount prevMetricsLog.Sup -> false
-        | prevMetricsLog -> prevMetricsLog.Trending
+        | prevMetricsLog when recordsLog.Hi >= computeAdjustedAmount prevMetricsLog.Res -> Positive
+        | prevMetricsLog when recordsLog.Lo <= computeAdjustedAmount prevMetricsLog.Sup -> Negative
+        | prevMetricsLog -> prevMetricsLog.TrendDirection
 
-    { ResLookback = resLookback
-      SupLookback = supLookback
-      Res         = res
-      Sup         = sup
-      Trending    = trending }
+    { ResLookback    = resLookback
+      SupLookback    = supLookback
+      Res            = res
+      Sup            = sup
+      TrendDirection = trendDirection }
 
 let computeMetricsLog (recordsLog : RecordsLog) = function
     | None      -> computeMetricsLogInit recordsLog
@@ -80,7 +81,7 @@ let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : Sum
     elementLogs
     |> Array.filter (fun x -> x.RecordsLog.Count >= paramWait)
     |> Array.filter (fun x -> x.RecordsLog.Shares = 0u)
-    |> Array.filter (fun x -> x.MetricsLog.Trending)
+    |> Array.filter (fun x -> x.MetricsLog.TrendDirection = Positive)
     |> Array.map computeOrder
 
 let calculateExitStop (elementLog : ElementLog<MetricsLog>) : decimal =
