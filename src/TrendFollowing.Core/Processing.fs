@@ -426,8 +426,9 @@ let runSimulation simulation =
     let elementLogs = Array.empty
     let nextOrders = Array.empty
 
-    simulation.Dates
-    |> Seq.scan (runIncrement simulation.GetQuotes simulation.Model) (journalLogs, elementLogs, summaryLog, nextOrders)
-    |> Seq.iter reportResults
-
-    simulation.ReportCompletion()
+    try
+        simulation.Dates
+        |> Seq.scan (runIncrement simulation.GetQuotes simulation.Model) (journalLogs, elementLogs, summaryLog, nextOrders)
+        |> Seq.iter reportResults
+    finally
+        simulation.ReportCompletion()
