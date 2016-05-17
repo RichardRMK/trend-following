@@ -150,7 +150,7 @@ let computeSummaryLog date journalLogs elementLogs (prevSummaryLog : SummaryLog)
     let position elementLog =
         elementLog.RecordsLog.Shares <> 0u
 
-    let positionValueEquity =
+    let positionValueAtSpot =
         elementLogs
         |> Seq.filter position
         |> Seq.map (fun x -> x.RecordsLog)
@@ -165,7 +165,7 @@ let computeSummaryLog date journalLogs elementLogs (prevSummaryLog : SummaryLog)
         |> Seq.sum
 
     let cash = prevSummaryLog.Cash + cashValueAdjustment
-    let equity = cash + positionValueEquity
+    let spotValue = cash + positionValueAtSpot
     let exitValue = cash + positionValueAtExit
     let peak = max prevSummaryLog.Peak exitValue
     let drawdown = (exitValue / peak) - 1m
@@ -173,7 +173,7 @@ let computeSummaryLog date journalLogs elementLogs (prevSummaryLog : SummaryLog)
 
     { Date      = date
       Cash      = cash
-      Equity    = equity
+      SpotValue = spotValue
       ExitValue = exitValue
       Peak      = peak
       Drawdown  = drawdown
@@ -416,7 +416,7 @@ let runSimulation simulation =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = simulation.Principal
-          Equity    = simulation.Principal
+          SpotValue = simulation.Principal
           ExitValue = simulation.Principal
           Peak      = simulation.Principal
           Drawdown  = 0m

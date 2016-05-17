@@ -36,7 +36,7 @@ type ElementLog<'T> =
 type SummaryLog =
     { Date       : DateTime
       Cash       : decimal
-      Equity     : decimal
+      SpotValue  : decimal
       ExitValue  : decimal
       Peak       : decimal
       Drawdown   : decimal

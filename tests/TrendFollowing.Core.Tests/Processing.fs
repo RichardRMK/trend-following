@@ -58,7 +58,7 @@ let ``Baseline increment`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -102,7 +102,7 @@ let ``Baseline increment`` () =
 
     summaryLog.Date        |> should equal date1
     summaryLog.Cash        |> should equal 1000000.00m
-    summaryLog.Equity      |> should equal 1000000.00m
+    summaryLog.SpotValue   |> should equal 1000000.00m
     summaryLog.ExitValue   |> should equal 1000000.00m
     summaryLog.Peak        |> should equal 1000000.00m
     summaryLog.Drawdown    |> should equal 0m
@@ -133,7 +133,7 @@ let ``Compute delta, price move`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -184,7 +184,7 @@ let ``Compute delta, price move, dividend 10%`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -235,7 +235,7 @@ let ``Compute delta, price move, dividend 50%`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -286,7 +286,7 @@ let ``Compute delta, price move, split 2:1`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -337,7 +337,7 @@ let ``Compute delta, price move, split 2:3`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -388,7 +388,7 @@ let ``Compute delta, price move, both dividend 10% and split 2:1`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -450,7 +450,7 @@ let ``Process transactions, take position`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -504,7 +504,7 @@ let ``Process transactions, take position`` () =
 
     summaryLog.Date        |> should equal date2
     summaryLog.Cash        |> should equal  989800.00m
-    summaryLog.Equity      |> should equal  999950.00m
+    summaryLog.SpotValue   |> should equal  999950.00m
     summaryLog.ExitValue   |> should equal  999810.00m
     summaryLog.Peak        |> should equal 1000000.00m
     summaryLog.Drawdown    |> should equal -0.0001900m
@@ -550,7 +550,7 @@ let ``Process transactions, take position and exit position on the same day`` ()
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -613,7 +613,7 @@ let ``Process transactions, take position and exit position on the same day`` ()
 
     summaryLog.Date        |> should equal date2
     summaryLog.Cash        |> should equal  999900.00m
-    summaryLog.Equity      |> should equal  999900.00m
+    summaryLog.SpotValue   |> should equal  999900.00m
     summaryLog.ExitValue   |> should equal  999900.00m
     summaryLog.Peak        |> should equal 1000000.00m
     summaryLog.Drawdown    |> should equal -0.0001000m
@@ -657,7 +657,7 @@ let ``Process transactions, take position and then exit position`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -712,7 +712,7 @@ let ``Process transactions, take position and then exit position`` () =
 
     summaryLog.Date        |> should equal date3
     summaryLog.Cash        |> should equal 1000000.00m
-    summaryLog.Equity      |> should equal 1000000.00m
+    summaryLog.SpotValue   |> should equal 1000000.00m
     summaryLog.ExitValue   |> should equal 1000000.00m
     summaryLog.Peak        |> should equal 1000000.00m
     summaryLog.Drawdown    |> should equal 0m
@@ -757,7 +757,7 @@ let ``Process transactions, take position and then hold position`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -803,7 +803,7 @@ let ``Process transactions, take position and then hold position`` () =
 
     summaryLog.Date        |> should equal date3
     summaryLog.Cash        |> should equal  989800.00m
-    summaryLog.Equity      |> should equal 1000050.00m
+    summaryLog.SpotValue   |> should equal 1000050.00m
     summaryLog.ExitValue   |> should equal  999820.00m
     summaryLog.Peak        |> should equal 1000000.00m
     summaryLog.Drawdown    |> should equal -0.0001800m
@@ -854,7 +854,7 @@ let ``Process transactions, take position and then stack onto existing position`
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -909,7 +909,7 @@ let ``Process transactions, take position and then stack onto existing position`
 
     summaryLog.Date        |> should equal date3
     summaryLog.Cash        |> should equal  974350.00m
-    summaryLog.Equity      |> should equal  999975.00m
+    summaryLog.SpotValue   |> should equal  999975.00m
     summaryLog.ExitValue   |> should equal  999400.00m
     summaryLog.Peak        |> should equal 1000000.00m
     summaryLog.Drawdown    |> should equal -0.0006000m
@@ -954,7 +954,7 @@ let ``Process transactions, with discontinued quote, ignore order to take positi
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -1019,7 +1019,7 @@ let ``Process transactions, with discontinued quote, liquidate existing position
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -1059,7 +1059,7 @@ let ``Process transactions, with discontinued quote, liquidate existing position
 
     summaryLog.Date        |> should equal date3
     summaryLog.Cash        |> should equal  999950.00m
-    summaryLog.Equity      |> should equal  999950.00m
+    summaryLog.SpotValue   |> should equal  999950.00m
     summaryLog.ExitValue   |> should equal  999950.00m
     summaryLog.Peak        |> should equal 1000000.00m
     summaryLog.Drawdown    |> should equal -0.0000500m
@@ -1104,7 +1104,7 @@ let ``Process transactions, with dividend 10%, existing position`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -1159,7 +1159,7 @@ let ``Process transactions, with dividend 10%, existing position`` () =
 
     summaryLog.Date        |> should equal date3
     summaryLog.Cash        |> should equal  990815.00m
-    summaryLog.Equity      |> should equal 1000040.00m
+    summaryLog.SpotValue   |> should equal 1000040.00m
     summaryLog.ExitValue   |> should equal  999833.00m
     summaryLog.Peak        |> should equal 1000000.00m
     summaryLog.Drawdown    |> should equal -0.0001670m
@@ -1209,7 +1209,7 @@ let ``Process transactions, with dividend 10%, take position`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -1264,7 +1264,7 @@ let ``Process transactions, with dividend 10%, take position`` () =
 
     summaryLog.Date        |> should equal date3
     summaryLog.Cash        |> should equal  990730.00m
-    summaryLog.Equity      |> should equal  999955.00m
+    summaryLog.SpotValue   |> should equal  999955.00m
     summaryLog.ExitValue   |> should equal  999748.00m
     summaryLog.Peak        |> should equal 1000000.00m
     summaryLog.Drawdown    |> should equal -0.0002520m
@@ -1314,7 +1314,7 @@ let ``Process transactions, with split 2:1, existing position`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -1371,7 +1371,7 @@ let ``Process transactions, with split 2:1, existing position`` () =
 
     summaryLog.Date        |> should equal date3
     summaryLog.Cash        |> should equal  989800.00m
-    summaryLog.Equity      |> should equal 1000050.00m
+    summaryLog.SpotValue   |> should equal 1000050.00m
     summaryLog.ExitValue   |> should equal  999820.00m
     summaryLog.Peak        |> should equal 1000000.00m
     summaryLog.Drawdown    |> should equal -0.0001800m
@@ -1421,7 +1421,7 @@ let ``Process transactions, with split 2:1, take position`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -1476,7 +1476,7 @@ let ``Process transactions, with split 2:1, take position`` () =
 
     summaryLog.Date        |> should equal date3
     summaryLog.Cash        |> should equal  989700.00m
-    summaryLog.Equity      |> should equal  999950.00m
+    summaryLog.SpotValue   |> should equal  999950.00m
     summaryLog.ExitValue   |> should equal  999720.00m
     summaryLog.Peak        |> should equal 1000000.00m
     summaryLog.Drawdown    |> should equal -0.0002800m
@@ -1526,7 +1526,7 @@ let ``Process transactions, with split 2:3, existing position`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -1583,7 +1583,7 @@ let ``Process transactions, with split 2:3, existing position`` () =
 
     summaryLog.Date        |> should equal date3
     summaryLog.Cash        |> should equal  989901.50m
-    summaryLog.Equity      |> should equal 1000049.00m
+    summaryLog.SpotValue   |> should equal 1000049.00m
     summaryLog.ExitValue   |> should equal  999821.30m
     summaryLog.Peak        |> should equal 1000000.00m
     summaryLog.Drawdown    |> should equal -0.0001787m
@@ -1633,7 +1633,7 @@ let ``Process transactions, with split 2:3, take position`` () =
     let summaryLog =
         { Date      = DateTime.MinValue
           Cash      = 1000000.00m
-          Equity    = 1000000.00m
+          SpotValue = 1000000.00m
           ExitValue = 1000000.00m
           Peak      = 1000000.00m
           Drawdown  = 0m
@@ -1688,7 +1688,7 @@ let ``Process transactions, with split 2:3, take position`` () =
 
     summaryLog.Date        |> should equal date3
     summaryLog.Cash        |> should equal  989803.00m
-    summaryLog.Equity      |> should equal  999950.50m
+    summaryLog.SpotValue   |> should equal  999950.50m
     summaryLog.ExitValue   |> should equal  999722.80m
     summaryLog.Peak        |> should equal 1000000.00m
     summaryLog.Drawdown    |> should equal -0.0002772m
