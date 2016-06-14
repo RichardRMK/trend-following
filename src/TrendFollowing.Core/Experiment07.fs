@@ -26,6 +26,7 @@ type MetricsLog =
       Range          : decimal
       RangeAvg       : decimal
       Stop           : decimal
+      Signal         : bool
       TrendDirection : TrendDirection }
 
 let private computeMetricsLogInit (recordsLog : RecordsLog) =
@@ -39,6 +40,7 @@ let private computeMetricsLogInit (recordsLog : RecordsLog) =
       Range          = recordsLog.Hi - recordsLog.Lo
       RangeAvg       = recordsLog.Hi - recordsLog.Lo
       Stop           = recordsLog.Lo - (paramRangeMult * (recordsLog.Hi - recordsLog.Lo))
+      Signal         = false
       TrendDirection = Negative }
 
 let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : ElementLog<MetricsLog>) =
@@ -79,10 +81,13 @@ let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : El
         | Some prevStop -> max prevStop stop
         | None -> stop
 
+    let signal = recordsLog.Hi > computeAdjustedAmount prevElementLog.MetricsLog.Res
+
     let trendDirection =
-        match prevElementLog.MetricsLog.Res with
-        | res when recordsLog.Hi >= computeAdjustedAmount res -> Positive
-        | res -> Negative
+        match recordsLog.ExitStop, signal with
+        | Some exitStop, _ when recordsLog.Lo <= exitStop -> Negative
+        | _, true -> Positive
+        | _ -> prevElementLog.MetricsLog.TrendDirection
 
     { ResLookback    = resLookback
       UpperLookback  = upperLookback
@@ -93,6 +98,7 @@ let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : El
       Range          = range
       RangeAvg       = rangeAvg
       Stop           = stop
+      Signal         = signal
       TrendDirection = trendDirection }
 
 let computeMetricsLog (recordsLog : RecordsLog) = function
@@ -115,6 +121,7 @@ let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : Sum
     elementLogs
     |> Array.filter (fun x -> x.RecordsLog.Count >= paramWait)
     |> Array.filter (fun x -> x.RecordsLog.Shares = 0u)
+    |> Array.filter (fun x -> x.MetricsLog.Signal)
     |> Array.filter (fun x -> x.MetricsLog.TrendDirection = Positive)
     |> Array.map computeOrder
 
