@@ -14,6 +14,6 @@ from
     inner join [Issue] issue on quote.[IssueId] = issue.[IssueId]
 where
     quote.[Date] between @dateStart and @dateFinal
-    and issue.[Ticker] in ('MSFT')
+    and issue.[Ticker] in (@ticker)
 order by
     issue.[Ticker] asc

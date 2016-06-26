@@ -34,7 +34,7 @@ module private GetQuotes =
 
     let execute dateStart dateFinal =
         use command = new CommandProvider()
-        let records = command.Execute(dateStart, dateFinal)
+        let records = command.Execute(dateStart, dateFinal, "MSFT")
         records
         |> Seq.map ofRecord
         |> Seq.toArray
