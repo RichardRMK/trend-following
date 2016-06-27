@@ -26,6 +26,9 @@ type RecordsLog =
       SplitOld   : uint32
       DeltaHi    : decimal
       DeltaLo    : decimal
+      DeltaClose : decimal
+      AccruedPos : decimal
+      AccruedNeg : decimal
       Shares     : uint32
       ExitStop   : decimal option }
 

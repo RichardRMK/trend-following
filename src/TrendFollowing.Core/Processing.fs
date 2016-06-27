@@ -62,19 +62,22 @@ let private computeRecordsLogInit (quote : Quote) exitOrder journalLogs =
     let shares = journalLogs |> computeShares 0u
     let exitStop = exitOrder |> computeExitStop
 
-    { Date     = quote.Date
-      Ticker   = quote.Ticker
-      Count    = 1u
-      Hi       = quote.Hi
-      Lo       = quote.Lo
-      Close    = quote.Close
-      Dividend = dividend
-      SplitNew = splitNew
-      SplitOld = splitOld
-      DeltaHi  = 0m
-      DeltaLo  = 0m
-      Shares   = shares
-      ExitStop = exitStop }
+    { Date       = quote.Date
+      Ticker     = quote.Ticker
+      Count      = 1u
+      Hi         = quote.Hi
+      Lo         = quote.Lo
+      Close      = quote.Close
+      Dividend   = dividend
+      SplitNew   = splitNew
+      SplitOld   = splitOld
+      DeltaHi    = 0m
+      DeltaLo    = 0m
+      DeltaClose = 0m
+      AccruedPos = 1m
+      AccruedNeg = 1m
+      Shares     = shares
+      ExitStop   = exitStop }
 
 let private computeRecordsLogNext (quote : Quote) exitOrder journalLogs prevRecordsLog =
 
@@ -87,23 +90,31 @@ let private computeRecordsLogNext (quote : Quote) exitOrder journalLogs prevReco
     let computeDelta = prevRecordsLog.Close |> computeDelta splitNew splitOld dividend
     let deltaHi = computeDelta quote.Hi prevRecordsLog.Hi
     let deltaLo = computeDelta quote.Lo prevRecordsLog.Lo
+    let deltaClose = computeDelta quote.Close prevRecordsLog.Close
+
+    // TODO: ...
+    let accruedPos = prevRecordsLog.AccruedPos * (1m + deltaClose)
+    let accruedNeg = prevRecordsLog.AccruedNeg * (1m / (1m + deltaClose))
 
     let shares = journalLogs |> computeShares prevRecordsLog.Shares
     let exitStop = exitOrder |> computeExitStop
 
-    { Date     = quote.Date
-      Ticker   = quote.Ticker
-      Count    = count
-      Hi       = quote.Hi
-      Lo       = quote.Lo
-      Close    = quote.Close
-      Dividend = dividend
-      SplitNew = splitNew
-      SplitOld = splitOld
-      DeltaHi  = deltaHi
-      DeltaLo  = deltaLo
-      Shares   = shares
-      ExitStop = exitStop }
+    { Date       = quote.Date
+      Ticker     = quote.Ticker
+      Count      = count
+      Hi         = quote.Hi
+      Lo         = quote.Lo
+      Close      = quote.Close
+      Dividend   = dividend
+      SplitNew   = splitNew
+      SplitOld   = splitOld
+      DeltaHi    = deltaHi
+      DeltaLo    = deltaLo
+      DeltaClose = deltaClose
+      AccruedPos = accruedPos
+      AccruedNeg = accruedNeg
+      Shares     = shares
+      ExitStop   = exitStop }
 
 let computeRecordsLog (quote : Quote) exitOrder journalLogs = function
     | None      -> computeRecordsLogInit quote exitOrder journalLogs
