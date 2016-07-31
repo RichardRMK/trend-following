@@ -1,8 +1,8 @@
 ﻿select
     quote.[Date]   as [Date],
     issue.[Ticker] as [Ticker],
-    quote.[High]   as [Hi],
-    quote.[Low]    as [Lo],
+    quote.[Hi]     as [Hi],
+    quote.[Lo]     as [Lo],
     quote.[Close]  as [Close],
     divid.[Amount] as [Dividend],
     split.[New]    as [SplitNew],
