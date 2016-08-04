@@ -65,6 +65,9 @@
     <Compile Include="Processing.fs" />
     <Compile Include="Metrics.fs" />
     <Compile Include="Output.fs" />
+    <Compile Include="System01.fs" />
+    <Compile Include="System02.fs" />
+    <Compile Include="System03.fs" />
     <Compile Include="Experiment01.fs" />
     <Compile Include="Experiment02.fs" />
     <Compile Include="Experiment03.fs" />

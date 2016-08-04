@@ -7,7 +7,7 @@ open TrendFollowing
 
 let stopwatch = Stopwatch.StartNew()
 
-Processing.runSimulation Experiment01.simulation
+Processing.runSimulation System03.simulation
 
 stopwatch.Stop()
 printfn "%A" stopwatch.Elapsed
