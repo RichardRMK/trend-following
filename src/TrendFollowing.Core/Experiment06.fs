@@ -1,4 +1,4 @@
-﻿module TrendFollowing.System06
+﻿module TrendFollowing.Experiment06
 
 open System
 open TrendFollowing.Types

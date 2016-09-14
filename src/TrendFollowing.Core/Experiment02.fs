@@ -1,4 +1,4 @@
-﻿module TrendFollowing.System04
+﻿module TrendFollowing.Experiment02
 
 open System
 open TrendFollowing.Types
@@ -9,7 +9,7 @@ open TrendFollowing.Output
 
 let private paramRisk = 0.1m
 let private paramWait = 200u
-let private paramDays = 200u
+let private paramInc = 0.002m
 
 //-------------------------------------------------------------------------------------------------
 
@@ -48,14 +48,12 @@ let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : El
         | Positive
             ->
             let extreme = max prevExtreme recordsLog.Hi
-            let percent = decimal ((float (extreme / prevReverse)) ** (1.0 / float paramDays) - 1.0)
-            let reverse = prevReverse + (percent * (extreme - prevReverse))
+            let reverse = prevReverse + (paramInc * (extreme - prevReverse))
             (extreme, reverse, Positive)
         | Negative
             ->
             let extreme = min prevExtreme recordsLog.Lo
-            let percent = decimal ((float (prevReverse / extreme)) ** (1.0 / float paramDays) - 1.0)
-            let reverse = 1m / ((1m / prevReverse) + (percent / extreme) - (percent / prevReverse))
+            let reverse = prevReverse + (paramInc * (extreme - prevReverse))
             (extreme, reverse, Negative)
 
     { Extreme        = extreme

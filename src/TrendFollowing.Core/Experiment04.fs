@@ -1,4 +1,4 @@
-﻿module TrendFollowing.System01
+﻿module TrendFollowing.Experiment04
 
 open System
 open TrendFollowing.Types
@@ -9,24 +9,19 @@ open TrendFollowing.Output
 
 let private paramRisk = 0.1m
 let private paramWait = 200u
-let private paramRes = 200
-let private paramSup = 200
+let private paramDays = 200u
 
 //-------------------------------------------------------------------------------------------------
 
 type MetricsLog =
-    { ResLookback    : decimal[]
-      SupLookback    : decimal[]
-      Res            : decimal
-      Sup            : decimal
+    { Extreme        : decimal
+      Reverse        : decimal
       TrendDirection : TrendDirection }
 
 let private computeMetricsLogInit (recordsLog : RecordsLog) =
 
-    { ResLookback    = Array.create paramRes recordsLog.Hi
-      SupLookback    = Array.create paramSup recordsLog.Lo
-      Res            = recordsLog.Hi
-      Sup            = recordsLog.Lo
+    { Extreme        = recordsLog.Lo
+      Reverse        = recordsLog.Hi
       TrendDirection = Negative }
 
 let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : ElementLog<MetricsLog>) =
@@ -34,31 +29,37 @@ let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : El
     let computeAdjustedAmount =
         Metrics.computeAdjustedAmount recordsLog prevElementLog
 
-    let resLookback =
-        prevElementLog.MetricsLog.ResLookback
-        |> Array.map computeAdjustedAmount
-        |> Array.append [| recordsLog.Hi |]
-        |> Array.take paramRes
+    let prevMetricsLog = prevElementLog.MetricsLog
+    let prevExtreme = computeAdjustedAmount prevMetricsLog.Extreme
+    let prevReverse = computeAdjustedAmount prevMetricsLog.Reverse
 
-    let supLookback =
-        prevElementLog.MetricsLog.SupLookback
-        |> Array.map computeAdjustedAmount
-        |> Array.append [| recordsLog.Lo |]
-        |> Array.take paramSup
+    let (extreme, reverse, trendDirection) =
+        match prevMetricsLog.TrendDirection with
+        | Positive when recordsLog.Lo <= prevReverse
+            ->
+            let extreme = recordsLog.Lo
+            let reverse = prevExtreme
+            (extreme, reverse, Negative)
+        | Negative when recordsLog.Hi >= prevReverse
+            ->
+            let extreme = recordsLog.Hi
+            let reverse = prevExtreme
+            (extreme, reverse, Positive)
+        | Positive
+            ->
+            let extreme = max prevExtreme recordsLog.Hi
+            let percent = decimal ((float (extreme / prevReverse)) ** (1.0 / float paramDays) - 1.0)
+            let reverse = prevReverse + (percent * (extreme - prevReverse))
+            (extreme, reverse, Positive)
+        | Negative
+            ->
+            let extreme = min prevExtreme recordsLog.Lo
+            let percent = decimal ((float (prevReverse / extreme)) ** (1.0 / float paramDays) - 1.0)
+            let reverse = 1m / ((1m / prevReverse) + (percent / extreme) - (percent / prevReverse))
+            (extreme, reverse, Negative)
 
-    let res = resLookback |> Array.max
-    let sup = supLookback |> Array.min
-
-    let trendDirection =
-        match prevElementLog.MetricsLog with
-        | prevMetricsLog when recordsLog.Hi >= computeAdjustedAmount prevMetricsLog.Res -> Positive
-        | prevMetricsLog when recordsLog.Lo <= computeAdjustedAmount prevMetricsLog.Sup -> Negative
-        | prevMetricsLog -> prevMetricsLog.TrendDirection
-
-    { ResLookback    = resLookback
-      SupLookback    = supLookback
-      Res            = res
-      Sup            = sup
+    { Extreme        = extreme
+      Reverse        = reverse
       TrendDirection = trendDirection }
 
 let computeMetricsLog (recordsLog : RecordsLog) = function
@@ -71,9 +72,9 @@ let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : Sum
 
     let computeOrder elementLog : TakeOrder =
 
-        let res = elementLog.MetricsLog.Res
-        let sup = elementLog.MetricsLog.Sup
-        let shares = (summaryLog.ExitValue * paramRisk) / (res - sup)
+        let extreme = elementLog.MetricsLog.Extreme
+        let reverse = elementLog.MetricsLog.Reverse
+        let shares = (summaryLog.ExitValue * paramRisk) / (extreme - reverse)
 
         { Ticker = elementLog.RecordsLog.Ticker
           Shares = uint32 shares }
@@ -86,7 +87,7 @@ let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : Sum
 
 let calculateExitStop (elementLog : ElementLog<MetricsLog>) : decimal =
 
-    elementLog.MetricsLog.Sup
+    elementLog.MetricsLog.Reverse
 
 //-------------------------------------------------------------------------------------------------
 
