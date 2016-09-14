@@ -62,11 +62,32 @@
     </Otherwise>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
+  <PropertyGroup>
+    <PostBuildEvent>if exist "$(ProjectDir)..\..\private\Private.config" xcopy "$(ProjectDir)..\..\private\Private.config" "$(TargetDir)" /y</PostBuildEvent>
+  </PropertyGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <Content Include="packages.config" />
+    <Compile Include="Types.fs" />
+    <Compile Include="Data.fs" />
+    <Compile Include="Processing.fs" />
+    <Compile Include="Metrics.fs" />
+    <Compile Include="Output.fs" />
+    <Compile Include="Experiment00.fs" />
+    <Compile Include="Experiment01.fs" />
+    <Compile Include="Experiment02.fs" />
+    <Compile Include="Experiment03.fs" />
+    <Compile Include="Experiment04.fs" />
+    <Compile Include="Experiment05.fs" />
+    <Compile Include="Experiment06.fs" />
+    <Compile Include="Experiment07.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FSharp.Data.SqlClient">
+      <HintPath>..\..\packages\FSharp.Data.SqlClient.1.8.2\lib\net40\FSharp.Data.SqlClient.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
@@ -78,16 +99,6 @@
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\TrendFollowing.Core\TrendFollowing.Core.fsproj">
-      <Name>TrendFollowing.Core</Name>
-      <Project>{0eceed09-536f-4a73-96a5-ba31e7f9ef3d}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <PropertyGroup>
-    <PostBuildEvent>if exist "$(ProjectDir)..\..\private\Private.config" xcopy "$(ProjectDir)..\..\private\Private.config" "$(TargetDir)" /y</PostBuildEvent>
-  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

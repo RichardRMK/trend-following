@@ -1,9 +1,9 @@
 ﻿<NUnitProject>
   <Settings activeconfig="Debug" />
-  <Config name="Debug" configfile="build\bin\AnyCPU\Debug\TrendFollowing.Core.Tests.dll.config" binpathtype="Auto">
-    <assembly path="build\bin\AnyCPU\Debug\TrendFollowing.Core.Tests.dll" />
+  <Config name="Debug" configfile="build\bin\AnyCPU\Debug\TrendFollowing.Tests.dll.config" binpathtype="Auto">
+    <assembly path="build\bin\AnyCPU\Debug\TrendFollowing.Tests.dll" />
   </Config>
-  <Config name="Release" configfile="build\bin\AnyCPU\Release\TrendFollowing.Core.Tests.dll.config" binpathtype="Auto">
-    <assembly path="build\bin\AnyCPU\Release\TrendFollowing.Core.Tests.dll" />
+  <Config name="Release" configfile="build\bin\AnyCPU\Release\TrendFollowing.Tests.dll.config" binpathtype="Auto">
+    <assembly path="build\bin\AnyCPU\Release\TrendFollowing.Tests.dll" />
   </Config>
 </NUnitProject>
