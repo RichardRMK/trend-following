@@ -65,26 +65,14 @@
     <Compile Include="Processing.fs" />
     <Compile Include="Metrics.fs" />
     <Compile Include="Output.fs" />
+    <Compile Include="System00.fs" />
     <Compile Include="System01.fs" />
     <Compile Include="System02.fs" />
     <Compile Include="System03.fs" />
-    <Compile Include="Experiment01.fs" />
-    <Compile Include="Experiment02.fs" />
-    <Compile Include="Experiment03.fs" />
-    <Compile Include="Experiment04.fs" />
-    <Compile Include="Experiment05.fs" />
-    <Compile Include="Experiment06.fs" />
-    <Compile Include="Experiment07.fs" />
-    <Compile Include="Experiment08.fs" />
-    <Compile Include="Experiment09.fs" />
-    <Compile Include="Experiment10.fs" />
-    <Compile Include="Experiment11.fs" />
-    <Compile Include="Experiment12.fs" />
-    <Compile Include="Experiment13.fs" />
-    <Compile Include="Experiment14.fs" />
-    <Compile Include="Experiment15.fs" />
-    <Compile Include="Experiment16.fs" />
-    <Compile Include="Experiment17.fs" />
+    <Compile Include="System04.fs" />
+    <Compile Include="System05.fs" />
+    <Compile Include="System06.fs" />
+    <Compile Include="System07.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Data.SqlClient">

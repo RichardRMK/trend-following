@@ -1,4 +1,4 @@
-﻿module TrendFollowing.Experiment03
+﻿module TrendFollowing.System06
 
 open System
 open TrendFollowing.Types
@@ -9,22 +9,28 @@ open TrendFollowing.Output
 
 let private paramRisk = 0.1m
 let private paramWait = 200u
-let private paramSarAfInc = 0.0002m
-let private paramSarAfMax = 0.0020m
+let private paramRes = 200
+let private paramAtr = 20
+let private paramAtrMult = 10.0m
+let private paramInc = 0.002m
 
 //-------------------------------------------------------------------------------------------------
 
 type MetricsLog =
-    { SarEp          : decimal
-      SarAf          : decimal
-      Sar            : decimal
+    { ResLookback    : decimal[]
+      Res            : decimal
+      Atr            : decimal
+      Stop           : decimal
+      Signal         : bool
       TrendDirection : TrendDirection }
 
 let private computeMetricsLogInit (recordsLog : RecordsLog) =
 
-    { SarEp          = recordsLog.Lo
-      SarAf          = paramSarAfInc
-      Sar            = recordsLog.Hi
+    { ResLookback    = Array.create paramRes recordsLog.Hi
+      Res            = recordsLog.Hi
+      Atr            = recordsLog.Hi - recordsLog.Lo
+      Stop           = recordsLog.Lo - (paramAtrMult * (recordsLog.Hi - recordsLog.Lo))
+      Signal         = false
       TrendDirection = Negative }
 
 let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : ElementLog<MetricsLog>) =
@@ -32,47 +38,40 @@ let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : El
     let computeAdjustedAmount =
         Metrics.computeAdjustedAmount recordsLog prevElementLog
 
-    let prevMetricsLog = prevElementLog.MetricsLog
-    let prevSarEp = computeAdjustedAmount prevMetricsLog.SarEp
-    let prevSarAf = prevMetricsLog.SarAf
-    let prevSar = computeAdjustedAmount prevMetricsLog.Sar
+    let resLookback =
+        prevElementLog.MetricsLog.ResLookback
+        |> Array.map computeAdjustedAmount
+        |> Array.append [| recordsLog.Hi |]
+        |> Array.take paramRes
 
-    let (sarEp, sarAf, sar, trendDirection) =
-        match prevMetricsLog.TrendDirection with
-        | Positive when recordsLog.Lo <= prevSar
-            ->
-            let sarEp = recordsLog.Lo
-            let sarAf = paramSarAfInc
-            let sar = prevSarEp
-            let trendDirection = Negative
-            (sarEp, sarAf, sar, trendDirection)
-        | Negative when recordsLog.Hi >= prevSar
-            ->
-            let sarEp = recordsLog.Hi
-            let sarAf = paramSarAfInc
-            let sar = prevSarEp
-            let trendDirection = Positive
-            (sarEp, sarAf, sar, trendDirection)
-        | Positive
-            ->
-            let incAf = if recordsLog.Hi > prevSarEp then paramSarAfInc else 0m
-            let sarEp = max recordsLog.Hi prevSarEp
-            let sarAf = min paramSarAfMax (prevSarAf + incAf)
-            let sar = prevSar + (prevSarAf * (prevSarEp - prevSar))
-            let trendDirection = Positive
-            (sarEp, sarAf, sar, trendDirection)
-        | Negative
-            ->
-            let incAf = if recordsLog.Lo < prevSarEp then paramSarAfInc else 0m
-            let sarEp = min recordsLog.Lo prevSarEp
-            let sarAf = min paramSarAfMax (prevSarAf + incAf)
-            let sar = prevSar + (prevSarAf * (prevSarEp - prevSar))
-            let trendDirection = Negative
-            (sarEp, sarAf, sar, trendDirection)
+    let res = resLookback |> Array.max
 
-    { SarEp          = sarEp
-      SarAf          = sarAf
-      Sar            = sar
+    let tr1 = recordsLog.Hi - recordsLog.Lo
+    let tr2 = recordsLog.Hi - (computeAdjustedAmount prevElementLog.RecordsLog.Close)
+    let tr3 = recordsLog.Lo - (computeAdjustedAmount prevElementLog.RecordsLog.Close)
+    let tr = [ tr1; tr2; tr3 ] |> List.max
+    
+    let prevAtr = computeAdjustedAmount prevElementLog.MetricsLog.Atr
+    let atr = prevAtr + ((tr - prevAtr) / decimal paramAtr)
+
+    let stop =
+        match recordsLog.ExitStop with
+        | None -> recordsLog.Lo - (paramAtrMult * atr)
+        | Some exitStop -> exitStop + (paramInc * (prevElementLog.MetricsLog.Res - exitStop))
+
+    let signal = recordsLog.Hi > computeAdjustedAmount prevElementLog.MetricsLog.Res
+
+    let trendDirection =
+        match recordsLog.ExitStop, signal with
+        | Some exitStop, _ when recordsLog.Lo <= exitStop -> Negative
+        | _, true -> Positive
+        | _ -> prevElementLog.MetricsLog.TrendDirection
+
+    { ResLookback    = resLookback
+      Res            = res
+      Atr            = atr
+      Stop           = stop
+      Signal         = signal
       TrendDirection = trendDirection }
 
 let computeMetricsLog (recordsLog : RecordsLog) = function
@@ -85,9 +84,9 @@ let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : Sum
 
     let computeOrder elementLog : TakeOrder =
 
-        let sarEp = elementLog.MetricsLog.SarEp
-        let sar = elementLog.MetricsLog.Sar
-        let shares = (summaryLog.ExitValue * paramRisk) / (sarEp - sar)
+        let res = elementLog.MetricsLog.Res
+        let stop = elementLog.MetricsLog.Stop
+        let shares = (summaryLog.ExitValue * paramRisk) / (res - stop)
 
         { Ticker = elementLog.RecordsLog.Ticker
           Shares = uint32 shares }
@@ -95,12 +94,13 @@ let computeTakeOrders (elementLogs : ElementLog<MetricsLog>[]) (summaryLog : Sum
     elementLogs
     |> Array.filter (fun x -> x.RecordsLog.Count >= paramWait)
     |> Array.filter (fun x -> x.RecordsLog.Shares = 0u)
+    |> Array.filter (fun x -> x.MetricsLog.Signal)
     |> Array.filter (fun x -> x.MetricsLog.TrendDirection = Positive)
     |> Array.map computeOrder
 
 let calculateExitStop (elementLog : ElementLog<MetricsLog>) : decimal =
 
-    elementLog.MetricsLog.Sar
+    elementLog.MetricsLog.Stop
 
 //-------------------------------------------------------------------------------------------------
 

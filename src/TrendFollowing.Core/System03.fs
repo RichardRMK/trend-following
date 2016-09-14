@@ -91,7 +91,7 @@ let calculateExitStop (elementLog : ElementLog<MetricsLog>) : decimal =
 
 let reportAgent = ReportAgent()
 
-let dateStart = DateTime(1960, 01, 01)
+let dateStart = DateTime(1990, 01, 01)
 let dateFinal = DateTime.Today
 let getQuotes = Data.getQuotes dateStart dateFinal
 let dates = Data.getDates dateStart dateFinal

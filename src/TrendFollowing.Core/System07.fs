@@ -1,4 +1,4 @@
-﻿module TrendFollowing.Experiment08
+﻿module TrendFollowing.System07
 
 open System
 open TrendFollowing.Types
@@ -10,16 +10,21 @@ open TrendFollowing.Output
 let private paramRisk = 0.1m
 let private paramWait = 200u
 let private paramRes = 200
-let private paramAtr = 20
-let private paramAtrMult = 10.0m
-let private paramInc = 0.002m
+let private paramRange = 20
+let private paramRangeAvg = 20
+let private paramRangeMult = 3.0m
 
 //-------------------------------------------------------------------------------------------------
 
 type MetricsLog =
     { ResLookback    : decimal[]
+      UpperLookback  : decimal[]
+      LowerLookback  : decimal[]
       Res            : decimal
-      Atr            : decimal
+      Upper          : decimal
+      Lower          : decimal
+      Range          : decimal
+      RangeAvg       : decimal
       Stop           : decimal
       Signal         : bool
       TrendDirection : TrendDirection }
@@ -27,9 +32,14 @@ type MetricsLog =
 let private computeMetricsLogInit (recordsLog : RecordsLog) =
 
     { ResLookback    = Array.create paramRes recordsLog.Hi
+      UpperLookback  = Array.create paramRange recordsLog.Hi
+      LowerLookback  = Array.create paramRange recordsLog.Lo
       Res            = recordsLog.Hi
-      Atr            = recordsLog.Hi - recordsLog.Lo
-      Stop           = recordsLog.Lo - (paramAtrMult * (recordsLog.Hi - recordsLog.Lo))
+      Upper          = recordsLog.Hi
+      Lower          = recordsLog.Lo
+      Range          = recordsLog.Hi - recordsLog.Lo
+      RangeAvg       = recordsLog.Hi - recordsLog.Lo
+      Stop           = recordsLog.Lo - (paramRangeMult * (recordsLog.Hi - recordsLog.Lo))
       Signal         = false
       TrendDirection = Negative }
 
@@ -44,20 +54,32 @@ let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : El
         |> Array.append [| recordsLog.Hi |]
         |> Array.take paramRes
 
+    let upperLookback =
+        prevElementLog.MetricsLog.UpperLookback
+        |> Array.map computeAdjustedAmount
+        |> Array.append [| recordsLog.Hi |]
+        |> Array.take paramRange
+
+    let lowerLookback =
+        prevElementLog.MetricsLog.LowerLookback
+        |> Array.map computeAdjustedAmount
+        |> Array.append [| recordsLog.Lo |]
+        |> Array.take paramRange
+
     let res = resLookback |> Array.max
+    let upper = upperLookback |> Array.max
+    let lower = lowerLookback |> Array.min
 
-    let tr1 = recordsLog.Hi - recordsLog.Lo
-    let tr2 = recordsLog.Hi - (computeAdjustedAmount prevElementLog.RecordsLog.Close)
-    let tr3 = recordsLog.Lo - (computeAdjustedAmount prevElementLog.RecordsLog.Close)
-    let tr = [ tr1; tr2; tr3 ] |> List.max
+    let range = upper - lower
     
-    let prevAtr = computeAdjustedAmount prevElementLog.MetricsLog.Atr
-    let atr = prevAtr + ((tr - prevAtr) / decimal paramAtr)
+    let prevRangeAvg = computeAdjustedAmount prevElementLog.MetricsLog.RangeAvg
+    let rangeAvg = prevRangeAvg + ((range - prevRangeAvg) / decimal paramRangeAvg)
 
+    let stop = recordsLog.Lo - (paramRangeMult * rangeAvg)
     let stop =
         match recordsLog.ExitStop with
-        | None -> recordsLog.Lo - (paramAtrMult * atr)
-        | Some exitStop -> exitStop + (paramInc * (prevElementLog.MetricsLog.Res - exitStop))
+        | Some prevStop -> max prevStop stop
+        | None -> stop
 
     let signal = recordsLog.Hi > computeAdjustedAmount prevElementLog.MetricsLog.Res
 
@@ -68,8 +90,13 @@ let private computeMetricsLogNext (recordsLog : RecordsLog) (prevElementLog : El
         | _ -> prevElementLog.MetricsLog.TrendDirection
 
     { ResLookback    = resLookback
+      UpperLookback  = upperLookback
+      LowerLookback  = lowerLookback
       Res            = res
-      Atr            = atr
+      Upper          = upper
+      Lower          = lower
+      Range          = range
+      RangeAvg       = rangeAvg
       Stop           = stop
       Signal         = signal
       TrendDirection = trendDirection }
