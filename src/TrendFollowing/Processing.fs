@@ -92,7 +92,6 @@ let private computeRecordsLogNext (quote : Quote) exitOrder journalLogs prevReco
     let deltaLo = computeDelta quote.Lo prevRecordsLog.Lo
     let deltaClose = computeDelta quote.Close prevRecordsLog.Close
 
-    // TODO: ...
     let accruedPos = prevRecordsLog.AccruedPos * (1m + deltaClose)
     let accruedNeg = prevRecordsLog.AccruedNeg * (1m / (1m + deltaClose))
 
